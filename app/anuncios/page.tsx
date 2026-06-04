@@ -59,6 +59,11 @@ function AnunciosContent() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 md:py-10">
+      {/* Sticky Filters Sub-header */}
+      <div className="sticky top-[64px] md:top-[72px] z-30 -mx-4 px-4 sm:-mx-6 sm:px-6 py-3 border-b border-white/5 bg-background/80 backdrop-blur-md mb-6">
+        <ProductFilters filters={filters} onChange={setFilters} />
+      </div>
+
       <section className="mb-8 md:mb-12">
         <div className="mb-6">
           <h1 className="font-heading text-balance">
@@ -103,8 +108,6 @@ function AnunciosContent() {
           </h2>
           <p className="text-xs text-surface-400">{products.length} anúncios encontrados</p>
         </div>
-
-        <ProductFilters filters={filters} onChange={setFilters} />
 
         <ProductGrid products={products} loading={loading} />
       </section>

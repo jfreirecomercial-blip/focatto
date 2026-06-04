@@ -10,6 +10,7 @@ import {
   User,
   GoogleAuthProvider,
   signInWithPopup,
+  sendPasswordResetEmail,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { createOrUpdateUserProfile, getUserProfile } from "@/lib/db";
@@ -24,6 +25,7 @@ interface AuthContextType {
   loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  sendPasswordReset: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -98,8 +100,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await signOut(auth);
   }, []);
 
+  const sendPasswordReset = useCallback(async (email: string) => {
+    if (!auth) throw new Error("Firebase not configured");
+    await sendPasswordResetEmail(auth, email);
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, profile, loading, login, register, loginWithGoogle, logout, refreshProfile }}>
+    <AuthContext.Provider value={{ user, profile, loading, login, register, loginWithGoogle, logout, refreshProfile, sendPasswordReset }}>
       {children}
     </AuthContext.Provider>
   );

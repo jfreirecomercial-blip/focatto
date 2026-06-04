@@ -110,6 +110,11 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/legislacao" className="text-sm text-surface-300 hover:text-accent transition-colors">
+                  Legislação
+                </Link>
+              </li>
+              <li>
                 <span className="text-xs text-emerald-500 flex items-center gap-1.5 font-medium">
                   <ShieldCheck size={14} weight="bold" /> Ambiente 100% Seguro
                 </span>

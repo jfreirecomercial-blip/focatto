@@ -122,21 +122,12 @@ export default function App() {
             </div>
             <div>
               <h1 className="text-xl font-bold font-heading m-0 flex items-center gap-2">
-                Focatto <span className="text-xs bg-surface-800 text-surface-300 font-sans px-2 py-0.5 rounded-full border border-surface-700">Vite Legacy SPA</span>
+                Focatto
               </h1>
-              <p className="text-[11px] text-surface-400 font-mono mt-0.5">
-                Legacy Single Page Application
+              <p className="text-[11px] text-surface-400 mt-0.5">
+                Marketplace de Instrumentos Musicais
               </p>
             </div>
-          </div>
-          
-          {/* Tech Badges */}
-          <div className="flex flex-wrap gap-1.5 justify-center">
-            <span className="text-[10px] bg-sky-950/40 text-sky-400 border border-sky-900/50 px-2 py-0.5 rounded-md font-mono">React 19</span>
-            <span className="text-[10px] bg-violet-950/40 text-violet-400 border border-violet-900/50 px-2 py-0.5 rounded-md font-mono">Vite 8</span>
-            <span className="text-[10px] bg-emerald-950/40 text-emerald-400 border border-emerald-900/50 px-2 py-0.5 rounded-md font-mono">Tailwind v4</span>
-            <span className="text-[10px] bg-amber-950/40 text-amber-400 border border-amber-900/50 px-2 py-0.5 rounded-md font-mono">Firebase v12</span>
-            <span className="text-[10px] bg-rose-950/40 text-rose-400 border border-rose-900/50 px-2 py-0.5 rounded-md font-mono">Leaflet</span>
           </div>
         </div>
       </header>
@@ -145,47 +136,7 @@ export default function App() {
       <main className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid lg:grid-cols-12 gap-8">
           
-          {/* Left Panel: Leaflet Map */}
-          <div className="lg:col-span-7 flex flex-col gap-4">
-            <div className="glass rounded-2xl p-5 border border-surface-800 flex flex-col gap-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-base font-bold flex items-center gap-2">
-                    <MapPin size={18} className="text-accent" />
-                    Mapa de Localização
-                  </h2>
-                  <p className="text-xs text-surface-400 mt-0.5">
-                    Visualização dinâmica com Leaflet
-                  </p>
-                </div>
-                {selectedItem && (
-                  <span className="text-xs font-mono bg-accent/10 text-accent px-2 py-0.5 rounded-md">
-                    {selectedItem.city}, {selectedItem.state}
-                  </span>
-                )}
-              </div>
-
-              {selectedItem ? (
-                <Map
-                  city={selectedItem.city}
-                  state={selectedItem.state}
-                  popupText={
-                    selectedItem.type === "produto" 
-                      ? `${selectedItem.title} - R$ ${selectedItem.price?.toLocaleString("pt-BR")}`
-                      : `${selectedItem.title} - Luthier (${selectedItem.rating?.toFixed(1)} ★)`
-                  }
-                  zoom={12}
-                  className="h-[450px] w-full rounded-xl overflow-hidden shadow-glass border border-surface-700/50"
-                />
-              ) : (
-                <div className="h-[450px] w-full rounded-xl bg-surface-900 flex items-center justify-center border border-surface-800">
-                  <p className="text-sm text-surface-400">Nenhum item selecionado</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Right Panel: Explorer & Listing */}
+          {/* Left Panel: Explorer & Listing */}
           <div className="lg:col-span-5 flex flex-col gap-4">
             
             {/* Tabs */}
@@ -289,12 +240,53 @@ export default function App() {
             </div>
 
           </div>
+
+          {/* Right Panel: Leaflet Map */}
+          <div className="lg:col-span-7 flex flex-col gap-4">
+            <div className="glass rounded-2xl p-5 border border-surface-800 flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-base font-bold flex items-center gap-2">
+                    <MapPin size={18} className="text-accent" />
+                    Mapa de Localização
+                  </h2>
+                  <p className="text-xs text-surface-400 mt-0.5">
+                    Visualização dinâmica com Leaflet
+                  </p>
+                </div>
+                {selectedItem && (
+                  <span className="text-xs font-mono bg-accent/10 text-accent px-2 py-0.5 rounded-md">
+                    {selectedItem.city}, {selectedItem.state}
+                  </span>
+                )}
+              </div>
+
+              {selectedItem ? (
+                <Map
+                  city={selectedItem.city}
+                  state={selectedItem.state}
+                  popupText={
+                    selectedItem.type === "produto" 
+                      ? `${selectedItem.title} - R$ ${selectedItem.price?.toLocaleString("pt-BR")}`
+                      : `${selectedItem.title} - Luthier (${selectedItem.rating?.toFixed(1)} ★)`
+                  }
+                  zoom={12}
+                  className="h-[450px] w-full rounded-xl overflow-hidden shadow-glass border border-surface-700/50"
+                />
+              ) : (
+                <div className="h-[450px] w-full rounded-xl bg-surface-900 flex items-center justify-center border border-surface-800">
+                  <p className="text-sm text-surface-400">Nenhum item selecionado</p>
+                </div>
+              )}
+            </div>
+          </div>
+
         </div>
       </main>
 
       {/* Footer */}
       <footer className="border-t border-surface-900 mt-16 py-6 text-center text-xs text-surface-500">
-        <p>&copy; {new Date().getFullYear()} Focatto. Desenvolvido com React 19, Vite, Tailwind CSS v4, Firebase v12 e Leaflet.</p>
+        <p>&copy; {new Date().getFullYear()} Focatto. Todos os direitos reservados.</p>
       </footer>
     </div>
   );

@@ -11,6 +11,10 @@ import {
   PlusCircle,
   List,
   X,
+  CaretDown,
+  Guitar,
+  Headphones,
+  Wrench,
 } from "@phosphor-icons/react";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar } from "@/components/ui/Avatar";
@@ -22,14 +26,19 @@ export function Header() {
   const router = useRouter();
   const [searchOpen, setSearchOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [anunciosDropdownOpen, setAnunciosDropdownOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const anunciosDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setMenuOpen(false);
+      }
+      if (anunciosDropdownRef.current && !anunciosDropdownRef.current.contains(e.target as Node)) {
+        setAnunciosDropdownOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClick);
@@ -72,18 +81,43 @@ export function Header() {
           </form>
 
           <nav className="hidden md:flex items-center gap-1">
-            <Link
-              href="/anuncios"
-              className="btn-ghost text-sm px-3 py-2 rounded-lg font-medium"
-            >
-              Anúncios
-            </Link>
-            <Link
-              href="/luthier"
-              className="btn-ghost text-sm px-3 py-2 rounded-lg font-medium"
-            >
-              Luthiers
-            </Link>
+            <div className="relative" ref={anunciosDropdownRef}>
+              <button
+                onClick={() => setAnunciosDropdownOpen(!anunciosDropdownOpen)}
+                className="btn-ghost text-sm px-3 py-2 rounded-lg font-medium flex items-center gap-1 cursor-pointer"
+              >
+                <span>Anúncios</span>
+                <CaretDown size={14} className={cn("transition-transform", anunciosDropdownOpen && "rotate-180")} />
+              </button>
+              {anunciosDropdownOpen && (
+                <div className="absolute left-0 top-full mt-2 w-48 glass-strong rounded-xl shadow-glass p-1.5 animate-scale-in">
+                  <Link
+                    href="/anuncios?categoria=instrumentos"
+                    onClick={() => setAnunciosDropdownOpen(false)}
+                    className="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg hover:bg-white/5 transition-colors"
+                  >
+                    <Guitar size={16} />
+                    <span>Instrumentos</span>
+                  </Link>
+                  <Link
+                    href="/anuncios?categoria=acessorios"
+                    onClick={() => setAnunciosDropdownOpen(false)}
+                    className="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg hover:bg-white/5 transition-colors"
+                  >
+                    <Headphones size={16} />
+                    <span>Acessórios</span>
+                  </Link>
+                  <Link
+                    href="/anuncios?categoria=luthier"
+                    onClick={() => setAnunciosDropdownOpen(false)}
+                    className="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg hover:bg-white/5 transition-colors"
+                  >
+                    <Wrench size={16} />
+                    <span>Luthier</span>
+                  </Link>
+                </div>
+              )}
+            </div>
           </nav>
 
           <div className="flex items-center gap-2">
@@ -197,38 +231,61 @@ export function Header() {
       </div>
 
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-white/5 p-4 animate-slide-up space-y-1 bg-background/95 backdrop-blur-lg">
-          <Link
-            href="/anuncios"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2.5 text-sm rounded-lg hover:bg-white/5 transition-colors"
-          >
-            Anúncios
-          </Link>
-          <Link
-            href="/luthier"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2.5 text-sm rounded-lg hover:bg-white/5 transition-colors"
-          >
-            Luthiers
-          </Link>
+        <div className="md:hidden border-t border-white/5 p-4 animate-slide-up space-y-3 bg-background/95 backdrop-blur-lg">
+          <div>
+            <span className="text-[10px] uppercase tracking-wider text-surface-400 font-semibold px-3 block mb-1">
+              Categorias de Anúncios
+            </span>
+            <div className="space-y-0.5">
+              <Link
+                href="/anuncios?categoria=instrumentos"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2.5 px-3 py-2.5 text-sm rounded-lg hover:bg-white/5 transition-colors"
+              >
+                <Guitar size={16} />
+                <span>Instrumentos</span>
+              </Link>
+              <Link
+                href="/anuncios?categoria=acessorios"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2.5 px-3 py-2.5 text-sm rounded-lg hover:bg-white/5 transition-colors"
+              >
+                <Headphones size={16} />
+                <span>Acessórios</span>
+              </Link>
+              <Link
+                href="/anuncios?categoria=luthier"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2.5 px-3 py-2.5 text-sm rounded-lg hover:bg-white/5 transition-colors"
+              >
+                <Wrench size={16} />
+                <span>Luthier</span>
+              </Link>
+            </div>
+          </div>
+
           {user && (
-            <>
-              <Link
-                href="/perfil"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2.5 text-sm rounded-lg hover:bg-white/5 transition-colors"
-              >
-                Meu Perfil
-              </Link>
-              <Link
-                href="/anunciar"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2.5 text-sm rounded-lg hover:bg-white/5 transition-colors"
-              >
-                Anunciar
-              </Link>
-            </>
+            <div className="border-t border-white/5 pt-3">
+              <span className="text-[10px] uppercase tracking-wider text-surface-400 font-semibold px-3 block mb-1">
+                Área do Usuário
+              </span>
+              <div className="space-y-0.5">
+                <Link
+                  href="/perfil"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block px-3 py-2.5 text-sm rounded-lg hover:bg-white/5 transition-colors"
+                >
+                  Meu Perfil
+                </Link>
+                <Link
+                  href="/anunciar"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block px-3 py-2.5 text-sm rounded-lg hover:bg-white/5 transition-colors"
+                >
+                  Anunciar
+                </Link>
+              </div>
+            </div>
           )}
         </div>
       )}
