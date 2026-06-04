@@ -21,6 +21,16 @@ import { AppointmentForm } from "@/components/luthier/AppointmentForm";
 import { useLuthier } from "@/hooks/useLuthier";
 import { formatDate } from "@/lib/utils";
 import type { LuthierService } from "@/types";
+import dynamic from "next/dynamic";
+
+const DynamicMap = dynamic(() => import("@/components/ui/Map"), {
+  ssr: false,
+  loading: () => (
+    <div className="h-[300px] w-full rounded-xl shimmer border border-surface-700/50 flex items-center justify-center">
+      <p className="text-sm text-surface-400">Carregando mapa...</p>
+    </div>
+  ),
+});
 
 export default function LuthierProfilePage() {
   const params = useParams();
@@ -94,6 +104,20 @@ export default function LuthierProfilePage() {
           </div>
         </div>
       </Card>
+
+      {(luthier.city || luthier.state) && (
+        <section className="mb-8">
+          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <MapPin size={18} />
+            Localização
+          </h2>
+          <DynamicMap
+            city={luthier.city}
+            state={luthier.state}
+            popupText={`${luthier.name} - ${luthier.city}, ${luthier.state}`}
+          />
+        </section>
+      )}
 
       <section className="mb-8">
         <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">

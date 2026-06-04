@@ -27,6 +27,16 @@ import { useCreateChat } from "@/hooks/useChat";
 import { incrementProductViews, createProposal } from "@/lib/db";
 import { formatCurrency, formatDate, conditionColor, conditionLabel } from "@/lib/utils";
 import { toast } from "sonner";
+import dynamic from "next/dynamic";
+
+const DynamicMap = dynamic(() => import("@/components/ui/Map"), {
+  ssr: false,
+  loading: () => (
+    <div className="h-[250px] w-full rounded-xl shimmer border border-surface-700/50 flex items-center justify-center">
+      <p className="text-sm text-surface-400">Carregando mapa...</p>
+    </div>
+  ),
+});
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -249,6 +259,20 @@ export default function ProductDetailPage() {
               <p className="text-sm text-surface-300 leading-relaxed whitespace-pre-line">
                 {product.description}
               </p>
+            </div>
+          )}
+
+          {(product.city || product.state) && (
+            <div className="pt-2">
+              <h3 className="text-sm font-semibold mb-2 flex items-center gap-1.5">
+                <MapPin size={16} />
+                Localização do Produto
+              </h3>
+              <DynamicMap
+                city={product.city}
+                state={product.state}
+                popupText={`${product.title} - ${product.city}, ${product.state}`}
+              />
             </div>
           )}
 
