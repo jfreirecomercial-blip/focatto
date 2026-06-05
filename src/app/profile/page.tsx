@@ -235,7 +235,7 @@ export default function ProfilePage() {
             </div>
             <div>
               <h1 className="text-lg font-bold text-white">Meu Perfil</h1>
-              <p className="text-[10px] text-surface-400">Focatto</p>
+              <p className="text-[10px] text-surface-400">Focattolecter</p>
             </div>
           </Link>
           <div className="flex items-center gap-3">
@@ -525,7 +525,7 @@ export default function ProfilePage() {
 
             <div className="px-6 pb-6 pt-4 space-y-5">
               <p className="text-xs text-surface-400">
-                Suas fotos serão analisadas e armazenadas com segurança. Apenas a equipe Focatto terá acesso.
+                Suas fotos serão analisadas e armazenadas com segurança. Apenas a equipe Focattolecter terá acesso.
               </p>
 
               {/* Document Upload */}

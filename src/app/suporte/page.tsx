@@ -19,7 +19,7 @@ const FAQ_ITEMS = [
     a: "Após criar sua conta, você poderá cadastrar produtos na plataforma. Em breve disponibilizaremos a funcionalidade completa de anúncios.",
   },
   {
-    q: "O Focatto cobra taxas?",
+    q: "O Focattolecter cobra taxas?",
     a: "Atualmente o cadastro e a navegação são gratuitos. Futuramente poderão ser implementadas taxas para funcionalidades premium.",
   },
   {
@@ -172,11 +172,11 @@ export default function SuportePage() {
           <p className="text-xs text-surface-400">
             Prefere enviar um email direto?{" "}
             <a
-              href="mailto:suporte@focatto.com.br"
+              href="mailto:suporte@focattolecter.com.br"
               id="support-direct-email-link"
               className="text-[#ef7c2c] hover:underline"
             >
-              suporte@focatto.com.br
+              suporte@focattolecter.com.br
             </a>
           </p>
         </section>

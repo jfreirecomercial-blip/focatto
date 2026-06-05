@@ -295,18 +295,12 @@ export default function HomePage() {
       {/* Header */}
       <header className="border-b border-[#1c1a19]/60 bg-[#0c0a09]/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 py-4 flex flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#ef7c2c] to-[#d4ae12] flex items-center justify-center shadow-lg">
-              <Compass size={22} weight="bold" className="text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold font-heading m-0 flex items-center gap-2 text-white">
-                Focatto
-              </h1>
-              <p className="text-[11px] text-surface-400 mt-0.5">
-                Marketplace de Instrumentos Musicais
-              </p>
-            </div>
+          <div className="flex items-center">
+            <img 
+              src="/focattolecter.png" 
+              alt="Focattolecter Logo" 
+              className="h-16 md:h-20 w-auto object-contain invert brightness-110 mix-blend-screen" 
+            />
           </div>
 
           {/* Auth */}
@@ -883,7 +877,7 @@ export default function HomePage() {
               Contato de Suporte
             </a>
           </div>
-          <p>&copy; {new Date().getFullYear()} Focatto. Todos os direitos reservados.</p>
+          <p>&copy; {new Date().getFullYear()} Focattolecter. Todos os direitos reservados.</p>
         </div>
       </footer>
     </div>

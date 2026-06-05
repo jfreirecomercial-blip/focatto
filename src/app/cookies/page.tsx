@@ -2,8 +2,8 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Política de Cookies - Focatto",
-  description: "Política de cookies e privacidade da plataforma Focatto.",
+  title: "Política de Cookies - Focattolecter",
+  description: "Política de cookies e privacidade da plataforma Focattolecter.",
 };
 
 export default function CookiesPage() {
@@ -28,7 +28,7 @@ export default function CookiesPage() {
 
           <section>
             <h2 className="text-lg font-bold text-white mb-2">2. Como Utilizamos Cookies</h2>
-            <p>O Focatto utiliza cookies para as seguintes finalidades:</p>
+            <p>O Focattolecter utiliza cookies para as seguintes finalidades:</p>
             <ul className="list-disc pl-5 mt-2 space-y-1">
               <li>Autenticação e segurança da sua conta</li>
               <li>Preferências de navegação e personalização</li>

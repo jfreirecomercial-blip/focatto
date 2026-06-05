@@ -18,7 +18,7 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Focatto - Marketplace de Instrumentos Musicais",
+  title: "Focattolecter - Marketplace de Instrumentos Musicais",
   description: "Encontre instrumentos musicais e luthiers especializados perto de você.",
 };
 

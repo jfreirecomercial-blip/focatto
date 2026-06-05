@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Suporte - Focatto",
-  description: "Central de atendimento, suporte e perguntas frequentes (FAQ) da plataforma Focatto.",
+  title: "Suporte - Focattolecter",
+  description: "Central de atendimento, suporte e perguntas frequentes (FAQ) da plataforma Focattolecter.",
 };
 
 export default function SuporteLayout({

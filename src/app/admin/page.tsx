@@ -437,7 +437,7 @@ export default function AdminPage() {
               </div>
               <div>
                 <h1 className="text-lg font-bold text-white">Painel Admin</h1>
-                <p className="text-[10px] text-surface-400">Focatto</p>
+                <p className="text-[10px] text-surface-400">Focattolecter</p>
               </div>
             </Link>
 
@@ -462,7 +462,7 @@ export default function AdminPage() {
         <main className="max-w-7xl mx-auto px-6 py-8">
           <div className="mb-6">
             <h2 className="text-2xl font-bold text-white font-heading">Dashboard</h2>
-            <p className="text-sm text-surface-400 mt-1">Gerencie sua plataforma Focatto</p>
+            <p className="text-sm text-surface-400 mt-1">Gerencie sua plataforma Focattolecter</p>
           </div>
 
           {/* Tabs */}
