@@ -121,6 +121,33 @@ export async function reviewProduct(
   });
 }
 
+export async function getProductById(productId: string): Promise<ProductData | null> {
+  try {
+    const docRef = doc(db, "products", productId);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      return { id: docSnap.id, ...docSnap.data() } as ProductData;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export async function getApprovedProducts(): Promise<ProductData[]> {
+  try {
+    const q = query(
+      collection(db, "products"),
+      where("status", "==", "approved"),
+      orderBy("createdAt", "desc"),
+    );
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() } as ProductData));
+  } catch {
+    return [];
+  }
+}
+
 export async function deleteProduct(productId: string) {
   await deleteDoc(doc(db, "products", productId));
 }

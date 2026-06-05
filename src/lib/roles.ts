@@ -95,3 +95,20 @@ export interface VerificationRequest {
   submittedAt: number;
   reviewedAt: number;
 }
+
+export interface RatingData {
+  id?: string;
+  productId: string;
+  sellerId: string;
+  userId: string;
+  userName: string;
+  rating: number;
+  comment: string;
+  createdAt: number;
+}
+
+export interface SellerStats {
+  averageRating: number;
+  totalRatings: number;
+  ratingDistribution: Record<number, number>;
+}

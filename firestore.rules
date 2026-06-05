@@ -153,6 +153,23 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Ratings subcollection (under products)
+    match /products/{productId}/ratings/{ratingId} {
+      // Anyone can read ratings
+      allow read: if true;
+
+      // Authenticated users can create ratings (but not their own product)
+      allow create: if isAuth()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.sellerId != request.auth.uid;
+
+      // Users can update their own rating
+      allow update: if isAuth() && resource.data.userId == request.auth.uid;
+
+      // Only admins can delete ratings
+      allow delete: if isAdmin();
+    }
+
     // Verifications collection
     match /verifications/{verificationId} {
       // Users can read their own verification

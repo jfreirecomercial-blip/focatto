@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { collection, getDocs, limit, query, where } from "firebase/firestore";
 import { db } from "../firebase";
 import dynamic from "next/dynamic";
@@ -74,6 +75,7 @@ const mockTeachers: ItemLocation[] = [
 ];
 
 export default function HomePage() {
+  const router = useRouter();
   const { user, userRole, loading: authLoading, logout } = useAuth();
   const [showLogin, setShowLogin] = useState(false);
   const [activeTab, setActiveTab] = useState<"produtos" | "luthiers" | "professores">("produtos");
@@ -802,12 +804,20 @@ export default function HomePage() {
                             )}
                           </div>
 
-                          {/* Price / Selection dot */}
-                          <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                          {/* Price / Actions */}
+                          <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
                             {(item.type === "produto" || item.type === "teacher") && item.price !== undefined && (
                               <span className="text-xs font-bold text-[#ef7c2c] whitespace-nowrap">
                                 R$ {item.price.toLocaleString("pt-BR")}{item.type === "teacher" ? " / h" : ""}
                               </span>
+                            )}
+                            {item.type === "produto" && (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); router.push(`/anuncio/${item.id}`); }}
+                                className="text-[9px] px-2 py-0.5 rounded border border-[#2a2827] text-surface-400 hover:text-white hover:border-[#ef7c2c] transition-all cursor-pointer"
+                              >
+                                Detalhes
+                              </button>
                             )}
                             {isSelected && (
                               <span className="h-1.5 w-1.5 rounded-full bg-[#ef7c2c] shadow-[0_0_8px_#ef7c2c]" />
@@ -991,6 +1001,14 @@ export default function HomePage() {
                             Falar no WhatsApp
                           </a>
                         )}
+                        <div className="flex items-center gap-2 mt-2">
+                          <button
+                            onClick={() => router.push(`/anuncio/${selectedItem.id}`)}
+                            className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-[#ef7c2c] to-[#d4ae12] text-white text-xs font-semibold transition-all hover:shadow-[0_4px_15px_rgba(239,124,44,0.3)] cursor-pointer"
+                          >
+                            Ver Anúncio Completo
+                          </button>
+                        </div>
                         <p className="text-xs text-surface-400 font-body leading-relaxed mt-2">
                           Clique em <strong className="text-white">Ver no Mapa</strong> acima para visualizar a localização geográfica do anunciante em tempo real no mapa dinâmico.
                         </p>
