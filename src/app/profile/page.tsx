@@ -20,6 +20,7 @@ import {
   Camera,
   FileImage,
   Spinner,
+  Package,
 } from "@phosphor-icons/react";
 import { toast } from "sonner";
 
@@ -243,6 +244,13 @@ export default function ProfilePage() {
               className="text-xs text-surface-400 hover:text-white transition-colors py-1.5 px-3 rounded-lg border border-[#2a2827]"
             >
               Voltar
+            </Link>
+            <Link
+              href="/meus-anuncios"
+              className="flex items-center gap-1.5 text-xs text-[#ef7c2c] hover:text-white transition-colors py-1.5 px-3 rounded-lg border border-[#ef7c2c]/30 hover:border-[#ef7c2c]/60"
+            >
+              <Package size={14} />
+              Meus Anúncios
             </Link>
             <button
               onClick={logout}

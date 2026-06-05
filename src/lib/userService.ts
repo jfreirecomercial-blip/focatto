@@ -1,7 +1,10 @@
 import { doc, getDoc, setDoc, updateDoc, collection, addDoc, getDocs, query, orderBy, where } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "../firebase";
-import { ADMIN_EMAILS, ROLES, type UserRole, type UserData, type UserAddress, type VerificationRequest, type VerificationStatus } from "./roles";
+import {
+  ADMIN_EMAILS, ROLES, type UserRole, type UserData, type UserAddress,
+  type VerificationRequest, type VerificationStatus,
+} from "./roles";
 
 const DEFAULT_ADDRESS: UserAddress = {
   cep: "",
@@ -34,6 +37,7 @@ export async function ensureUserDocument(uid: string, email: string | null, disp
     address: { ...DEFAULT_ADDRESS },
     role: isAdmin ? ROLES.ADMIN : ROLES.USER,
     isVerified: false,
+    isProfessional: false,
     verificationStatus: "none",
     createdAt: Date.now(),
     updatedAt: Date.now(),
@@ -142,6 +146,35 @@ export async function getAllVerifications(): Promise<VerificationRequest[]> {
   } catch {
     return [];
   }
+}
+
+export async function getAllUsers(): Promise<UserData[]> {
+  try {
+    const q = query(collection(db, "users"), orderBy("createdAt", "desc"));
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => ({ uid: d.id, ...d.data() } as unknown as UserData));
+  } catch {
+    return [];
+  }
+}
+
+export async function adminUpdateUserRole(uid: string, role: UserRole) {
+  const userRef = doc(db, "users", uid);
+  await updateDoc(userRef, { role, updatedAt: Date.now() });
+}
+
+export async function adminSetUserVerified(uid: string, isVerified: boolean) {
+  const userRef = doc(db, "users", uid);
+  await updateDoc(userRef, {
+    isVerified,
+    verificationStatus: isVerified ? "approved" : "none",
+    updatedAt: Date.now(),
+  });
+}
+
+export async function adminSetUserProfessional(uid: string, isProfessional: boolean) {
+  const userRef = doc(db, "users", uid);
+  await updateDoc(userRef, { isProfessional, updatedAt: Date.now() });
 }
 
 export async function reviewVerification(

@@ -76,7 +76,7 @@ export default function HomePage() {
       try {
         setLoading(true);
         if (activeTab === "produtos") {
-          const q = query(collection(db, "products"), where("status", "==", "active"), limit(10));
+          const q = query(collection(db, "products"), where("status", "==", "approved"), limit(10));
           const querySnapshot = await getDocs(q);
           const productsList: ItemLocation[] = [];
           
@@ -157,6 +157,12 @@ export default function HomePage() {
           <div className="flex items-center gap-3">
             {user ? (
               <div className="flex items-center gap-3">
+                <a
+                  href="/meus-anuncios"
+                  className="text-xs text-surface-400 hover:text-white transition-colors py-1.5 px-3 rounded-lg border border-[#2a2827] hover:border-[#ef7c2c]/30"
+                >
+                  Anunciar
+                </a>
                 {userRole === ROLES.ADMIN && (
                   <a
                     href="/admin"

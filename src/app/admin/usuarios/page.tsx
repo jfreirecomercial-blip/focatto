@@ -1,0 +1,205 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import AdminGuard from "../../../components/admin/AdminGuard";
+import { useAuth } from "../../../contexts/AuthContext";
+import { getAllUsers, adminUpdateUserRole, adminSetUserVerified, adminSetUserProfessional } from "../../../lib/userService";
+import { ROLES, type UserData, type UserRole } from "../../../lib/roles";
+import Link from "next/link";
+import {
+  Compass, SignOut, Spinner, ArrowLeft, Users, ShieldCheck, Star, User,
+  CheckCircle, XCircle,
+} from "@phosphor-icons/react";
+import { toast } from "sonner";
+
+export default function AdminUsuariosPage() {
+  const { user, logout } = useAuth();
+  const [users, setUsers] = useState<UserData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [processingUid, setProcessingUid] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  async function loadUsers() {
+    setLoading(true);
+    try {
+      const data = await getAllUsers();
+      setUsers(data);
+    } catch {
+      toast.error("Erro ao carregar usuários.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleToggleRole(uid: string, currentRole: UserRole) {
+    setProcessingUid(uid);
+    const newRole = currentRole === ROLES.ADMIN ? ROLES.USER : ROLES.ADMIN;
+    try {
+      await adminUpdateUserRole(uid, newRole);
+      setUsers((prev) => prev.map((u) => (u.uid === uid ? { ...u, role: newRole } : u)));
+      toast.success(`Usuário ${newRole === "admin" ? "promovido a admin" : "revertido para usuário"}.`);
+    } catch {
+      toast.error("Erro ao alterar role.");
+    } finally {
+      setProcessingUid(null);
+    }
+  }
+
+  async function handleToggleVerified(uid: string, current: boolean) {
+    setProcessingUid(uid);
+    const newVal = !current;
+    try {
+      await adminSetUserVerified(uid, newVal);
+      setUsers((prev) => prev.map((u) => (u.uid === uid ? { ...u, isVerified: newVal, verificationStatus: newVal ? "approved" : "none" } : u)));
+      toast.success(`Usuário ${newVal ? "verificado" : "não verificado"}.`);
+    } catch {
+      toast.error("Erro ao alterar verificação.");
+    } finally {
+      setProcessingUid(null);
+    }
+  }
+
+  async function handleToggleProfessional(uid: string, current: boolean) {
+    setProcessingUid(uid);
+    const newVal = !current;
+    try {
+      await adminSetUserProfessional(uid, newVal);
+      setUsers((prev) => prev.map((u) => (u.uid === uid ? { ...u, isProfessional: newVal } : u)));
+      toast.success(`Usuário ${newVal ? "marcado como profissional" : "removido como profissional"}.`);
+    } finally {
+      setProcessingUid(null);
+    }
+  }
+
+  const filtered = search
+    ? users.filter((u) =>
+        u.displayName.toLowerCase().includes(search.toLowerCase()) ||
+        u.email.toLowerCase().includes(search.toLowerCase())
+      )
+    : users;
+
+  const inputBase =
+    "w-full bg-[#181615] border border-[#2a2827] rounded-xl px-4 py-3 text-sm text-white placeholder-surface-400 outline-none transition-all duration-200 focus:border-[#ef7c2c] focus:shadow-[0_0_0_3px_rgba(239,124,44,0.1)]";
+
+  return (
+    <AdminGuard>
+      <div className="min-h-screen bg-[#0b0908] text-surface-50 font-sans">
+        <header className="border-b border-[#1c1a19]/60 bg-[#0c0a09]/80 backdrop-blur-md sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Link href="/admin" className="text-surface-400 hover:text-white transition-colors">
+                <ArrowLeft size={18} />
+              </Link>
+              <div className="h-9 w-9 rounded-full bg-gradient-to-br from-[#ef7c2c] to-[#d4ae12] flex items-center justify-center">
+                <Compass size={20} weight="bold" className="text-white" />
+              </div>
+              <div>
+                <h1 className="text-lg font-bold text-white">Usuários</h1>
+                <p className="text-[10px] text-surface-400">Gerencie permissões e badges</p>
+              </div>
+            </div>
+            <button onClick={logout}
+              className="flex items-center gap-1.5 text-xs text-surface-400 hover:text-white transition-colors py-1.5 px-3 rounded-lg border border-[#2a2827] hover:border-[#ef7c2c]/30"
+            >
+              <SignOut size={14} /> Sair
+            </button>
+          </div>
+        </header>
+
+        <main className="max-w-4xl mx-auto px-6 py-8 space-y-6">
+          <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar por nome ou email..."
+            className={inputBase}
+          />
+
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <Spinner size={24} className="animate-spin text-[#ef7c2c]" />
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="text-center py-12">
+              <Users size={48} className="mx-auto text-surface-500 mb-3" />
+              <p className="text-surface-400 text-sm">Nenhum usuário encontrado.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filtered.map((u) => (
+                <div key={u.uid} className="bg-[#141211] rounded-2xl p-5 border border-[#22201e] space-y-4">
+                  <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-[#ef7c2c] to-[#d4ae12] flex items-center justify-center text-sm font-bold text-white flex-shrink-0">
+                      {u.displayName?.charAt(0).toUpperCase() || u.email?.charAt(0).toUpperCase() || "U"}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-bold text-white truncate">{u.displayName}</h3>
+                      <p className="text-xs text-surface-400 truncate">{u.email}</p>
+                      <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                        {u.role === "admin" && (
+                          <span className="text-[10px] bg-[#ef7c2c]/10 text-[#ef7c2c] border border-[#ef7c2c]/20 px-2 py-0.5 rounded-full font-semibold">Admin</span>
+                        )}
+                        {u.isVerified && (
+                          <span className="text-[10px] bg-emerald-400/10 text-emerald-400 border border-emerald-400/20 px-2 py-0.5 rounded-full font-semibold flex items-center gap-1">
+                            <CheckCircle size={10} weight="fill" /> Verificado
+                          </span>
+                        )}
+                        {u.isProfessional && (
+                          <span className="text-[10px] bg-amber-400/10 text-amber-400 border border-amber-400/20 px-2 py-0.5 rounded-full font-semibold flex items-center gap-1">
+                            <Star size={10} weight="fill" /> Profissional
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 pt-2 border-t border-[#22201e]">
+                    {/* Toggle Admin */}
+                    <button onClick={() => handleToggleRole(u.uid, u.role)}
+                      disabled={processingUid === u.uid}
+                      className={`flex items-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold transition-all disabled:opacity-60 ${
+                        u.role === "admin"
+                          ? "bg-[#ef7c2c]/10 text-[#ef7c2c] border border-[#ef7c2c]/20 hover:bg-[#ef7c2c]/20"
+                          : "bg-[#181615] text-surface-400 border border-[#2a2827] hover:text-white"
+                      }`}
+                    >
+                      {processingUid === u.uid ? <Spinner size={12} className="animate-spin" /> : <ShieldCheck size={14} />}
+                      {u.role === "admin" ? "Remover Admin" : "Tornar Admin"}
+                    </button>
+
+                    {/* Toggle Verified */}
+                    <button onClick={() => handleToggleVerified(u.uid, u.isVerified)}
+                      disabled={processingUid === u.uid}
+                      className={`flex items-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold transition-all disabled:opacity-60 ${
+                        u.isVerified
+                          ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20"
+                          : "bg-[#181615] text-surface-400 border border-[#2a2827] hover:text-white"
+                      }`}
+                    >
+                      {processingUid === u.uid ? <Spinner size={12} className="animate-spin" /> : <CheckCircle size={14} />}
+                      {u.isVerified ? "Remover Verificado" : "Marcar Verificado"}
+                    </button>
+
+                    {/* Toggle Professional */}
+                    <button onClick={() => handleToggleProfessional(u.uid, u.isProfessional)}
+                      disabled={processingUid === u.uid}
+                      className={`flex items-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold transition-all disabled:opacity-60 ${
+                        u.isProfessional
+                          ? "bg-amber-400/10 text-amber-400 border border-amber-400/20 hover:bg-amber-400/20"
+                          : "bg-[#181615] text-surface-400 border border-[#2a2827] hover:text-white"
+                      }`}
+                    >
+                      {processingUid === u.uid ? <Spinner size={12} className="animate-spin" /> : <Star size={14} />}
+                      {u.isProfessional ? "Remover Profissional" : "Marcar Profissional"}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </main>
+      </div>
+    </AdminGuard>
+  );
+}

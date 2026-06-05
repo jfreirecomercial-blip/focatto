@@ -21,6 +21,29 @@ export interface UserAddress {
 
 export type VerificationStatus = "none" | "pending" | "approved" | "rejected";
 
+export type ProductStatus = "pending" | "approved" | "rejected";
+
+export interface ProductData {
+  id?: string;
+  userId: string;
+  userEmail: string;
+  userName: string;
+  title: string;
+  description: string;
+  price: number;
+  category: string;
+  condition: string;
+  city: string;
+  state: string;
+  photos: string[];
+  status: ProductStatus;
+  adminNotes: string;
+  reviewedBy: string;
+  createdAt: number;
+  updatedAt: number;
+  reviewedAt: number;
+}
+
 export interface UserData {
   uid: string;
   email: string;
@@ -32,6 +55,7 @@ export interface UserData {
   address: UserAddress;
   role: UserRole;
   isVerified: boolean;
+  isProfessional: boolean;
   verificationStatus: VerificationStatus;
   createdAt: number;
   updatedAt: number;

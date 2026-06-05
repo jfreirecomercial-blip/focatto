@@ -63,25 +63,31 @@ export default function AdminPage() {
               </div>
             </Link>
 
-            <div className="bg-[#141211] rounded-2xl p-5 border border-[#22201e] flex items-center gap-4">
+            <Link
+              href="/admin/produtos"
+              className="bg-[#141211] rounded-2xl p-5 border border-[#22201e] flex items-center gap-4 hover:border-[#ef7c2c]/30 transition-all"
+            >
               <div className="h-12 w-12 rounded-xl bg-[#d4ae12]/10 flex items-center justify-center">
                 <Package size={24} className="text-[#d4ae12]" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">--</p>
-                <p className="text-xs text-surface-400">Produtos</p>
+                <p className="text-lg font-bold text-white">Anúncios</p>
+                <p className="text-xs text-surface-400">Aprove ou rejeite anúncios</p>
               </div>
-            </div>
+            </Link>
 
-            <div className="bg-[#141211] rounded-2xl p-5 border border-[#22201e] flex items-center gap-4">
+            <Link
+              href="/admin/usuarios"
+              className="bg-[#141211] rounded-2xl p-5 border border-[#22201e] flex items-center gap-4 hover:border-[#ef7c2c]/30 transition-all"
+            >
               <div className="h-12 w-12 rounded-xl bg-[#ef7c2c]/10 flex items-center justify-center">
-                <Wrench size={24} className="text-[#ef7c2c]" />
+                <Users size={24} className="text-[#ef7c2c]" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">--</p>
-                <p className="text-xs text-surface-400">Luthiers</p>
+                <p className="text-lg font-bold text-white">Usuários</p>
+                <p className="text-xs text-surface-400">Gerencie permissões e badges</p>
               </div>
-            </div>
+            </Link>
           </div>
         </main>
       </div>
