@@ -3,12 +3,12 @@
 import { useState, useEffect } from "react";
 import AdminGuard from "../../../components/admin/AdminGuard";
 import { useAuth } from "../../../contexts/AuthContext";
-import { getAllUsers, adminUpdateUserRole, adminSetUserVerified, adminSetUserProfessional } from "../../../lib/userService";
+import { getAllUsers, adminUpdateUserRole, adminSetUserVerified, adminSetUserProfessional, adminSetUserTeacher } from "../../../lib/userService";
 import { ROLES, type UserData, type UserRole } from "../../../lib/roles";
 import Link from "next/link";
 import {
   Compass, SignOut, Spinner, ArrowLeft, Users, ShieldCheck, Star, User,
-  CheckCircle, XCircle,
+  CheckCircle, XCircle, GraduationCap,
 } from "@phosphor-icons/react";
 import { toast } from "sonner";
 
@@ -70,6 +70,20 @@ export default function AdminUsuariosPage() {
       await adminSetUserProfessional(uid, newVal);
       setUsers((prev) => prev.map((u) => (u.uid === uid ? { ...u, isProfessional: newVal } : u)));
       toast.success(`Usuário ${newVal ? "marcado como profissional" : "removido como profissional"}.`);
+    } finally {
+      setProcessingUid(null);
+    }
+  }
+
+  async function handleToggleTeacher(uid: string, current: boolean) {
+    setProcessingUid(uid);
+    const newVal = !current;
+    try {
+      await adminSetUserTeacher(uid, newVal);
+      setUsers((prev) => prev.map((u) => (u.uid === uid ? { ...u, isTeacher: newVal } : u)));
+      toast.success(`Usuário ${newVal ? "marcado como professor" : "removido como professor"}.`);
+    } catch {
+      toast.error("Erro ao alterar status de professor.");
     } finally {
       setProcessingUid(null);
     }
@@ -153,6 +167,11 @@ export default function AdminUsuariosPage() {
                             <Star size={10} weight="fill" /> Profissional
                           </span>
                         )}
+                        {u.isTeacher && (
+                          <span className="text-[10px] bg-indigo-400/10 text-indigo-400 border border-indigo-400/20 px-2 py-0.5 rounded-full font-semibold flex items-center gap-1">
+                            <GraduationCap size={10} weight="fill" /> Professor
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -198,6 +217,20 @@ export default function AdminUsuariosPage() {
                     >
                       {processingUid === u.uid ? <Spinner size={12} className="animate-spin" /> : <Star size={14} />}
                       {u.isProfessional ? "Remover Profissional" : "Marcar Profissional"}
+                    </button>
+
+                    {/* Toggle Teacher */}
+                    <button onClick={() => handleToggleTeacher(u.uid, !!u.isTeacher)}
+                      disabled={processingUid === u.uid}
+                      id={`toggle-teacher-${u.uid}`}
+                      className={`flex items-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-semibold transition-all disabled:opacity-60 ${
+                        u.isTeacher
+                          ? "bg-indigo-400/10 text-indigo-400 border border-indigo-400/20 hover:bg-indigo-400/20"
+                          : "bg-[#181615] text-surface-400 border border-[#2a2827] hover:text-white"
+                      }`}
+                    >
+                      {processingUid === u.uid ? <Spinner size={12} className="animate-spin" /> : <GraduationCap size={14} />}
+                      {u.isTeacher ? "Remover Professor" : "Marcar Professor"}
                     </button>
                   </div>
                 </div>

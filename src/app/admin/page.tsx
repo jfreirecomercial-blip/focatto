@@ -6,15 +6,15 @@ import { useAuth } from "../../contexts/AuthContext";
 import Link from "next/link";
 import {
   Compass, SignOut, Clock, Users, Package, Wrench, MusicNote,
-  CheckCircle, XCircle, Spinner, ArrowLeft,
+  CheckCircle, XCircle, Spinner, ArrowLeft, GraduationCap,
 } from "@phosphor-icons/react";
 import { getPendingProducts, getProductsByCategory, getProductsByCategories, reviewProduct } from "../../lib/productService";
-import { getPendingVerifications, getAllUsers, getProfessionalUsers, reviewVerification, adminUpdateUserRole, adminSetUserVerified, adminSetUserProfessional } from "../../lib/userService";
+import { getPendingVerifications, getAllUsers, getProfessionalUsers, getTeacherUsers, reviewVerification, adminUpdateUserRole, adminSetUserVerified, adminSetUserProfessional, adminSetUserTeacher } from "../../lib/userService";
 import type { ProductData, VerificationRequest, UserData } from "../../lib/roles";
 import { ROLES } from "../../lib/roles";
 import { toast } from "sonner";
 
-type Tab = "pendentes" | "luthier" | "acessorios" | "instrumentos" | "usuarios";
+type Tab = "pendentes" | "luthier" | "acessorios" | "instrumentos" | "usuarios" | "professores";
 
 const INSTRUMENT_CATEGORIES = ["Guitarra", "Violão", "Baixo", "Bateria", "Teclado", "Saxofone", "Violino"];
 
@@ -203,12 +203,14 @@ function UserCard({
   onToggleRole,
   onToggleVerified,
   onToggleProfessional,
+  onToggleTeacher,
   toggling,
 }: {
   u: UserData;
   onToggleRole: (uid: string) => void;
   onToggleVerified: (uid: string, v: boolean) => void;
   onToggleProfessional: (uid: string, v: boolean) => void;
+  onToggleTeacher: (uid: string, v: boolean) => void;
   toggling: string | null;
 }) {
   return (
@@ -234,6 +236,9 @@ function UserCard({
           )}
           {u.isProfessional && (
             <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#d4ae12]/10 text-[#d4ae12] border border-[#d4ae12]/20">Profissional</span>
+          )}
+          {u.isTeacher && (
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-400/10 text-indigo-400 border border-indigo-400/20">Professor</span>
           )}
         </div>
       </div>
@@ -271,6 +276,17 @@ function UserCard({
         >
           Prof.
         </button>
+        <button onClick={() => onToggleTeacher(u.uid, !!u.isTeacher)}
+          disabled={toggling === u.uid}
+          id={`toggle-teacher-${u.uid}`}
+          className={`text-[10px] font-semibold py-2 px-3 rounded-lg border transition-all disabled:opacity-60 ${
+            u.isTeacher
+              ? "bg-indigo-400/10 text-indigo-400 border-indigo-400/20 hover:bg-indigo-400/20"
+              : "bg-[#181615] text-surface-400 border-[#2a2827] hover:border-indigo-400/30"
+          }`}
+        >
+          Prof.Mús.
+        </button>
       </div>
     </div>
   );
@@ -286,6 +302,7 @@ export default function AdminPage() {
   const [instrumentoProducts, setInstrumentoProducts] = useState<ProductData[]>([]);
   const [users, setUsers] = useState<UserData[]>([]);
   const [professionalUsers, setProfessionalUsers] = useState<UserData[]>([]);
+  const [teacherUsers, setTeacherUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [productAdminNotes, setProductAdminNotes] = useState("");
@@ -314,6 +331,11 @@ export default function AdminPage() {
         case "luthier": {
           const pros = await getProfessionalUsers();
           setProfessionalUsers(pros);
+          break;
+        }
+        case "professores": {
+          const teachers = await getTeacherUsers();
+          setTeacherUsers(teachers);
           break;
         }
         case "acessorios": {
@@ -412,9 +434,23 @@ export default function AdminPage() {
     }
   }
 
+  async function handleToggleTeacher(uid: string, value: boolean) {
+    setTogglingUser(uid);
+    try {
+      await adminSetUserTeacher(uid, value);
+      toast.success(value ? "Usuário marcado como professor!" : "Marca professor removida.");
+      loadTabData();
+    } catch {
+      toast.error("Erro ao alterar status de professor.");
+    } finally {
+      setTogglingUser(null);
+    }
+  }
+
   const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
     { key: "pendentes", label: "Pendentes", icon: <Clock size={16} weight="bold" /> },
     { key: "luthier", label: "Luthier", icon: <Wrench size={16} weight="bold" /> },
+    { key: "professores", label: "Professores", icon: <GraduationCap size={16} weight="bold" /> },
     { key: "acessorios", label: "Acessórios", icon: <Package size={16} weight="bold" /> },
     { key: "instrumentos", label: "Instrumentos", icon: <MusicNote size={16} weight="bold" /> },
     { key: "usuarios", label: "Usuários", icon: <Users size={16} weight="bold" /> },
@@ -570,6 +606,7 @@ export default function AdminPage() {
                           onToggleRole={handleToggleRole}
                           onToggleVerified={handleToggleVerified}
                           onToggleProfessional={handleToggleProfessional}
+                          onToggleTeacher={handleToggleTeacher}
                           toggling={togglingUser}
                         />
                       ))}
@@ -577,6 +614,32 @@ export default function AdminPage() {
                   )}
                 </div>
               )}
+
+              {/* Professores */}
+              {activeTab === "professores" && (
+                <div>
+                  <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <GraduationCap size={18} className="text-[#d4ae12]" />
+                    Professores de Música
+                  </h3>
+                  {teacherUsers.length === 0 ? (
+                    <div className="text-center py-12 bg-[#141211] rounded-2xl border border-[#22201e]">
+                      <GraduationCap size={40} className="mx-auto text-surface-500 mb-2" />
+                      <p className="text-surface-400 text-sm">Nenhum professor cadastrado.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {teacherUsers.map((u) => (
+                        <UserCard
+                          key={u.uid}
+                          u={u}
+                          onToggleRole={handleToggleRole}
+                          onToggleVerified={handleToggleVerified}
+                          onToggleProfessional={handleToggleProfessional}
+                          onToggleTeacher={handleToggleTeacher}
+                          toggling={togglingUser}
+                        />
+                      ))}
 
               {/* Acessórios */}
               {activeTab === "acessorios" && (
@@ -668,6 +731,7 @@ export default function AdminPage() {
                           onToggleRole={handleToggleRole}
                           onToggleVerified={handleToggleVerified}
                           onToggleProfessional={handleToggleProfessional}
+                          onToggleTeacher={handleToggleTeacher}
                           toggling={togglingUser}
                         />
                       ))}

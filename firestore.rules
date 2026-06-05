@@ -70,6 +70,20 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // Teachers collection
+    match /teachers/{teacherId} {
+      // Anyone can read teacher profiles
+      allow read: if true;
+
+      // Only authenticated teachers can create their profile
+      allow create: if isAuth() && request.auth.uid == teacherId;
+
+      // Teachers can update their own profile
+      allow update: if isAuth() && request.auth.uid == teacherId;
+
+      allow delete: if isAdmin();
+    }
+
     // Appointments collection
     match /appointments/{appointmentId} {
       // Users can read their own appointments (as client or luthier)

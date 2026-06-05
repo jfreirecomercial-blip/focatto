@@ -14,7 +14,8 @@ import {
   User,
   MagnifyingGlass,
   Faders,
-  X
+  X,
+  GraduationCap
 } from "@phosphor-icons/react";
 import { useAuth } from "../contexts/AuthContext";
 import LoginModal from "../components/LoginModal";
@@ -40,11 +41,15 @@ interface ItemLocation {
   state: string;
   neighborhood?: string;
   price?: number;
-  type: "produto" | "luthier";
+  type: "produto" | "luthier" | "teacher";
   rating?: number;
   specialties?: string[];
   photo?: string;
   category?: string;
+  levels?: string[];
+  modalities?: string[];
+  phone?: string;
+  bio?: string;
 }
 
 const mockProducts: ItemLocation[] = [
@@ -62,17 +67,23 @@ const mockLuthiers: ItemLocation[] = [
   { id: "l3", title: "Luthieria do Sul", city: "Porto Alegre", state: "RS", neighborhood: "Moinhos de Vento", type: "luthier", rating: 4.8, specialties: ["Trastes", "Eletrônica"] },
 ];
 
+const mockTeachers: ItemLocation[] = [
+  { id: "t1", title: "João Silva - Aulas de Violão & Guitarra", city: "São Paulo", state: "SP", neighborhood: "Pinheiros", price: 80, type: "teacher", rating: 4.8, specialties: ["Violão", "Guitarra", "Teoria Musical"], levels: ["Iniciante", "Intermediário"], modalities: ["Presencial", "Online"], bio: "Professor com mais de 10 anos de experiência didática no ensino de cordas.", phone: "11999999999" },
+  { id: "t2", title: "Aline Mendes - Técnica Vocal & Canto", city: "Rio de Janeiro", state: "RJ", neighborhood: "Copacabana", price: 120, type: "teacher", rating: 5.0, specialties: ["Canto / Técnica Vocal", "Teoria Musical"], levels: ["Iniciante", "Intermediário", "Avançado"], modalities: ["Online"], bio: "Aulas focadas em fisiologia vocal, respiração, afinação e interpretação.", phone: "21988888888" },
+  { id: "t3", title: "Roberto K. - Aulas de Bateria", city: "Curitiba", state: "PR", neighborhood: "Centro", price: 90, type: "teacher", rating: 4.9, specialties: ["Bateria"], levels: ["Iniciante", "Intermediário", "Avançado"], modalities: ["Presencial"], bio: "Aprenda ritmos, rudimentos, leitura de partitura e grooves diversos.", phone: "41977777777" },
+];
+
 export default function HomePage() {
   const { user, userRole, loading: authLoading, logout } = useAuth();
   const [showLogin, setShowLogin] = useState(false);
-  const [activeTab, setActiveTab] = useState<"produtos" | "luthiers">("produtos");
+  const [activeTab, setActiveTab] = useState<"produtos" | "luthiers" | "professores">("produtos");
   const [items, setItems] = useState<ItemLocation[]>([]);
   const [selectedItem, setSelectedItem] = useState<ItemLocation | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Sidebar Filter States
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<"todas" | "instrumentos" | "acessorios" | "luthier">("todas");
+  const [selectedCategory, setSelectedCategory] = useState<"todas" | "instrumentos" | "acessorios" | "luthier" | "professor">("todas");
   const [quickPriceFilter, setQuickPriceFilter] = useState<number | null>(null);
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
@@ -85,22 +96,26 @@ export default function HomePage() {
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // Handle dropdown category changes and sync with activeTab
-  const handleCategoryChange = (cat: "todas" | "instrumentos" | "acessorios" | "luthier") => {
+  const handleCategoryChange = (cat: "todas" | "instrumentos" | "acessorios" | "luthier" | "professor") => {
     setSelectedCategory(cat);
     if (cat === "luthier") {
       setActiveTab("luthiers");
+    } else if (cat === "professor") {
+      setActiveTab("professores");
     } else {
       setActiveTab("produtos");
     }
   };
 
   // Sync tab clicks back to selectedCategory dropdown
-  const handleTabChange = (tab: "produtos" | "luthiers") => {
+  const handleTabChange = (tab: "produtos" | "luthiers" | "professores") => {
     setActiveTab(tab);
     if (tab === "produtos") {
       setSelectedCategory("todas");
-    } else {
+    } else if (tab === "luthiers") {
       setSelectedCategory("luthier");
+    } else {
+      setSelectedCategory("professor");
     }
   };
 
@@ -122,7 +137,7 @@ export default function HomePage() {
   useEffect(() => {
     async function fetchData() {
       if (!db) {
-        const fallbacks = activeTab === "produtos" ? mockProducts : mockLuthiers;
+        const fallbacks = activeTab === "produtos" ? mockProducts : activeTab === "luthiers" ? mockLuthiers : mockTeachers;
         setItems(fallbacks);
         setSelectedItem(fallbacks[0] || null);
         setLoading(false);
@@ -154,7 +169,7 @@ export default function HomePage() {
           const finalProducts = productsList.length > 0 ? productsList : mockProducts;
           setItems(finalProducts);
           setSelectedItem(finalProducts[0] || null);
-        } else {
+        } else if (activeTab === "luthiers") {
           const q = query(collection(db, "luthiers"), limit(10));
           const querySnapshot = await getDocs(q);
           const luthiersList: ItemLocation[] = [];
@@ -177,10 +192,38 @@ export default function HomePage() {
           const finalLuthiers = luthiersList.length > 0 ? luthiersList : mockLuthiers;
           setItems(finalLuthiers);
           setSelectedItem(finalLuthiers[0] || null);
+        } else {
+          const q = query(collection(db, "teachers"), limit(10));
+          const querySnapshot = await getDocs(q);
+          const teachersList: ItemLocation[] = [];
+          
+          querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            teachersList.push({
+              id: doc.id,
+              title: data.name || "Sem nome",
+              city: data.city || "São Paulo",
+              state: data.state || "SP",
+              neighborhood: data.neighborhood || "",
+              price: data.pricePerHour,
+              type: "teacher",
+              rating: data.rating || 5.0,
+              specialties: data.specialties || [],
+              photo: data.photoURL || undefined,
+              levels: data.levels || [],
+              modalities: data.modalities || [],
+              phone: data.phone || "",
+              bio: data.bio || "",
+            });
+          });
+
+          const finalTeachers = teachersList.length > 0 ? teachersList : mockTeachers;
+          setItems(finalTeachers);
+          setSelectedItem(finalTeachers[0] || null);
         }
       } catch (err) {
         console.error("Error loading data from Firestore:", err);
-        const fallbacks = activeTab === "produtos" ? mockProducts : mockLuthiers;
+        const fallbacks = activeTab === "produtos" ? mockProducts : activeTab === "luthiers" ? mockLuthiers : mockTeachers;
         setItems(fallbacks);
         setSelectedItem(fallbacks[0] || null);
       } finally {
@@ -227,10 +270,14 @@ export default function HomePage() {
         if (selectedCategory !== "luthier" && selectedCategory !== "todas") {
           return false;
         }
+      } else if (item.type === "teacher") {
+        if (selectedCategory !== "professor" && selectedCategory !== "todas") {
+          return false;
+        }
       }
 
-      // 3. Price Filter (only for products)
-      if (item.type === "produto") {
+      // 3. Price Filter (only for products and teachers)
+      if (item.type === "produto" || item.type === "teacher") {
         const itemPrice = item.price || 0;
         
         // Quick Price Pill Filter
@@ -325,6 +372,7 @@ export default function HomePage() {
             <option value="instrumentos">🎸 Instrumentos</option>
             <option value="acessorios">🔌 Acessórios</option>
             <option value="luthier">🛠️ Luthier</option>
+            <option value="professor">🎓 Professor de Música</option>
           </select>
           <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-surface-400">
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -619,6 +667,18 @@ export default function HomePage() {
             <Wrench size={14} weight={activeTab === "luthiers" ? "fill" : "regular"} />
             Luthiers Especializados
           </button>
+          <button
+            onClick={() => handleTabChange("professores")}
+            id="tab-professores"
+            className={`flex items-center gap-2 py-2.5 px-5 text-xs font-semibold rounded-xl transition-all duration-300 cursor-pointer ${
+              activeTab === "professores" 
+                ? "bg-gradient-to-r from-[#ef7c2c] to-[#d4ae12] text-white shadow-[0_4px_15px_rgba(239,124,44,0.25)] font-bold scale-[1.02]" 
+                : "bg-[#181615] text-surface-400 hover:text-white border border-[#252322] hover:bg-[#201e1d]"
+            }`}
+          >
+            <GraduationCap size={14} weight={activeTab === "professores" ? "fill" : "regular"} />
+            Professores de Música
+          </button>
         </div>
 
         {/* Mobile Filter Toggle */}
@@ -701,6 +761,8 @@ export default function HomePage() {
                             ) : (
                               item.type === "luthier" ? (
                                 <Wrench size={20} className="text-[#ef7c2c]" />
+                              ) : item.type === "teacher" ? (
+                                <GraduationCap size={20} className="text-indigo-400" />
                               ) : (
                                 <Tag size={20} className="text-[#d4ae12]" />
                               )
@@ -718,17 +780,21 @@ export default function HomePage() {
                                 {item.city}, {item.state}
                                 {item.neighborhood ? ` (${item.neighborhood})` : ""}
                               </span>
-                              {item.type === "luthier" && item.rating && (
+                              {(item.type === "luthier" || item.type === "teacher") && item.rating && (
                                 <span className="flex items-center gap-0.5 text-amber-400 font-semibold flex-shrink-0">
                                   <Star size={10} weight="fill" />
                                   {item.rating.toFixed(1)}
                                 </span>
                               )}
                             </div>
-                            {item.type === "luthier" && item.specialties && (
+                            {(item.type === "luthier" || item.type === "teacher") && item.specialties && (
                               <div className="flex flex-wrap gap-1 mt-1.5">
                                 {item.specialties.slice(0, 2).map((s, idx) => (
-                                  <span key={idx} className="text-[9px] bg-[#221710] text-[#e67e22] border border-[#3d2719] px-1.5 py-0.2 rounded">
+                                  <span key={idx} className={`text-[9px] px-1.5 py-0.2 rounded border ${
+                                    item.type === "teacher"
+                                      ? "bg-indigo-500/10 text-indigo-300 border-indigo-500/20"
+                                      : "bg-[#221710] text-[#e67e22] border-[#3d2719]"
+                                  }`}>
                                     {s}
                                   </span>
                                 ))}
@@ -738,9 +804,9 @@ export default function HomePage() {
 
                           {/* Price / Selection dot */}
                           <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                            {item.type === "produto" && item.price !== undefined && (
+                            {(item.type === "produto" || item.type === "teacher") && item.price !== undefined && (
                               <span className="text-xs font-bold text-[#ef7c2c] whitespace-nowrap">
-                                R$ {item.price.toLocaleString("pt-BR")}
+                                R$ {item.price.toLocaleString("pt-BR")}{item.type === "teacher" ? " / h" : ""}
                               </span>
                             )}
                             {isSelected && (
@@ -818,6 +884,8 @@ export default function HomePage() {
                           <div className="flex flex-col items-center gap-3 text-surface-500">
                             {selectedItem.type === "luthier" ? (
                               <Wrench size={48} className="text-[#ef7c2c]/40 animate-pulse" />
+                            ) : selectedItem.type === "teacher" ? (
+                              <GraduationCap size={48} className="text-indigo-400/40 animate-pulse" />
                             ) : (
                               <Tag size={48} className="text-[#d4ae12]/40 animate-pulse" />
                             )}
@@ -834,9 +902,9 @@ export default function HomePage() {
                               <span className="truncate">{selectedItem.city}, {selectedItem.state}{selectedItem.neighborhood ? ` - ${selectedItem.neighborhood}` : ""}</span>
                             </p>
                           </div>
-                          {selectedItem.type === "produto" && selectedItem.price !== undefined && (
+                          {(selectedItem.type === "produto" || selectedItem.type === "teacher") && selectedItem.price !== undefined && (
                             <span className="text-sm font-bold text-[#ef7c2c] whitespace-nowrap">
-                              R$ {selectedItem.price.toLocaleString("pt-BR")}
+                              R$ {selectedItem.price.toLocaleString("pt-BR")}{selectedItem.type === "teacher" ? " / hora" : ""}
                             </span>
                           )}
                         </div>
@@ -846,9 +914,9 @@ export default function HomePage() {
                       <div className="p-4 rounded-xl bg-[#110f0e] border border-[#1c1a19] flex flex-col gap-2">
                         <div className="flex items-center justify-between">
                           <span className="text-[10px] uppercase tracking-wider font-bold text-surface-400 bg-surface-800 px-2 py-0.5 rounded">
-                            {selectedItem.type === "produto" ? "Produto / Instrumento" : "Luthier Especializado"}
+                            {selectedItem.type === "produto" ? "Produto / Instrumento" : selectedItem.type === "teacher" ? "Professor de Música" : "Luthier Especializado"}
                           </span>
-                          {selectedItem.type === "luthier" && selectedItem.rating && (
+                          {(selectedItem.type === "luthier" || selectedItem.type === "teacher") && selectedItem.rating && (
                             <span className="flex items-center gap-1 text-amber-400 font-semibold text-xs">
                               <Star size={12} weight="fill" />
                               {selectedItem.rating.toFixed(1)} de 5.0
@@ -858,17 +926,70 @@ export default function HomePage() {
                         <h3 className="text-base font-bold text-white font-body mt-1">
                           {selectedItem.title}
                         </h3>
-                        {selectedItem.type === "luthier" && selectedItem.specialties && (
+                        {(selectedItem.type === "luthier" || selectedItem.type === "teacher") && selectedItem.specialties && (
                           <div className="flex flex-col gap-1.5 mt-2">
                             <span className="text-[10px] font-bold text-surface-400">Especialidades:</span>
                             <div className="flex flex-wrap gap-1.5">
                               {selectedItem.specialties.map((s, idx) => (
-                                <span key={idx} className="text-[10px] bg-[#221710] text-[#e67e22] border border-[#3d2719] px-2.5 py-0.5 rounded">
+                                <span key={idx} className={`text-[10px] border px-2.5 py-0.5 rounded ${
+                                  selectedItem.type === "teacher"
+                                    ? "bg-indigo-500/10 text-indigo-300 border-indigo-500/20"
+                                    : "bg-[#221710] text-[#e67e22] border-[#3d2719]"
+                                }`}>
                                   {s}
                                 </span>
                               ))}
                             </div>
                           </div>
+                        )}
+                        {selectedItem.type === "teacher" && (
+                          <>
+                            {selectedItem.modalities && selectedItem.modalities.length > 0 && (
+                              <div className="flex flex-col gap-1.5 mt-2">
+                                <span className="text-[10px] font-bold text-surface-400">Modalidades:</span>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {selectedItem.modalities.map((m, idx) => (
+                                    <span key={idx} className="text-[10px] bg-surface-800 text-surface-300 px-2.5 py-0.5 rounded border border-surface-700">
+                                      {m}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {selectedItem.levels && selectedItem.levels.length > 0 && (
+                              <div className="flex flex-col gap-1.5 mt-2">
+                                <span className="text-[10px] font-bold text-surface-400">Níveis atendidos:</span>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {selectedItem.levels.map((l, idx) => (
+                                    <span key={idx} className="text-[10px] bg-surface-800 text-surface-300 px-2.5 py-0.5 rounded border border-surface-700">
+                                      {l}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {selectedItem.bio && (
+                              <div className="flex flex-col gap-1 mt-2">
+                                <span className="text-[10px] font-bold text-surface-400">Sobre as Aulas:</span>
+                                <p className="text-xs text-surface-300 font-body leading-relaxed">
+                                  {selectedItem.bio}
+                                </p>
+                              </div>
+                            )}
+                          </>
+                        )}
+                        {selectedItem.phone && (
+                          <a
+                            href={`https://wa.me/55${selectedItem.phone.replace(/\D/g, "")}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-3 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition-all shadow-lg hover:shadow-emerald-600/20"
+                          >
+                            <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
+                              <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.438 9.888-9.886.002-5.48-4.421-9.929-9.893-9.929-5.462 0-9.898 4.438-9.9 9.888-.001 2.124.6 3.736 1.597 5.4l-.994 3.635 3.737-.98c.002.001.002.001.002.001zm10.292-6.568c-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.667.149-.198.297-.766.967-.94 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.15-.174.2-.298.3-.496.099-.198.05-.371-.025-.52-.075-.149-.667-1.61-.915-2.203-.242-.579-.487-.501-.667-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414-.074-.124-.272-.198-.57-.347z"/>
+                            </svg>
+                            Falar no WhatsApp
+                          </a>
                         )}
                         <p className="text-xs text-surface-400 font-body leading-relaxed mt-2">
                           Clique em <strong className="text-white">Ver no Mapa</strong> acima para visualizar a localização geográfica do anunciante em tempo real no mapa dinâmico.
@@ -882,7 +1003,9 @@ export default function HomePage() {
                       popupText={
                         selectedItem.type === "produto" 
                           ? `${selectedItem.title} - R$ ${selectedItem.price?.toLocaleString("pt-BR")}`
-                          : `${selectedItem.title} - Luthier (${selectedItem.rating?.toFixed(1)} ★)`
+                          : selectedItem.type === "teacher"
+                            ? `${selectedItem.title} - Aula (${selectedItem.rating?.toFixed(1)} ★) - R$ ${selectedItem.price?.toLocaleString("pt-BR")}/h`
+                            : `${selectedItem.title} - Luthier (${selectedItem.rating?.toFixed(1)} ★)`
                       }
                       zoom={12}
                       className="h-[280px] md:h-[480px] w-full rounded-xl overflow-hidden shadow-inner border border-[#282523]"

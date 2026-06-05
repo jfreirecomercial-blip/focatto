@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../contexts/AuthContext";
-import { getUserData, updateUserProfile, uploadProfilePhoto, submitVerificationRequest } from "../../lib/userService";
+import { getUserData, updateUserProfile, uploadProfilePhoto, submitVerificationRequest, getTeacherProfile, updateTeacherProfile } from "../../lib/userService";
 import type { UserData } from "../../lib/roles";
 import Link from "next/link";
 import {
@@ -21,6 +21,7 @@ import {
   FileImage,
   Spinner,
   Package,
+  GraduationCap,
 } from "@phosphor-icons/react";
 import { toast } from "sonner";
 
@@ -29,6 +30,15 @@ const UF_LIST = [
   "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI",
   "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO",
 ];
+
+const TEACHER_SPECIALTIES_LIST = [
+  "Violão", "Guitarra", "Baixo", "Bateria", "Canto / Técnica Vocal",
+  "Teclado / Piano", "Violino", "Saxofone", "Flauta", "Teoria Musical",
+  "Produção Musical / Home Studio", "Outro"
+];
+
+const TEACHER_LEVELS_LIST = ["Iniciante", "Intermediário", "Avançado"];
+const TEACHER_MODALITIES_LIST = ["Presencial", "Online"];
 
 export default function ProfilePage() {
   const { user, logout } = useAuth();
@@ -59,6 +69,13 @@ export default function ProfilePage() {
   const [facePreview, setFacePreview] = useState<string>("");
   const [submittingVerification, setSubmittingVerification] = useState(false);
 
+  // Teacher profile states
+  const [teacherBio, setTeacherBio] = useState("");
+  const [teacherSpecialties, setTeacherSpecialties] = useState<string[]>([]);
+  const [teacherPricePerHour, setTeacherPricePerHour] = useState("");
+  const [teacherLevels, setTeacherLevels] = useState<string[]>([]);
+  const [teacherModalities, setTeacherModalities] = useState<string[]>([]);
+
   useEffect(() => {
     if (!user) return;
     (async () => {
@@ -76,6 +93,17 @@ export default function ProfilePage() {
         setNeighborhood(data.address.neighborhood);
         setCity(data.address.city);
         setState(data.address.state);
+
+        if (data.isTeacher) {
+          const tData = await getTeacherProfile(user.uid);
+          if (tData) {
+            setTeacherBio(tData.bio || "");
+            setTeacherSpecialties(tData.specialties || []);
+            setTeacherPricePerHour(tData.pricePerHour ? String(tData.pricePerHour) : "");
+            setTeacherLevels(tData.levels || []);
+            setTeacherModalities(tData.modalities || []);
+          }
+        }
       }
       setLoading(false);
     })();
@@ -92,6 +120,24 @@ export default function ProfilePage() {
         bio,
         address: { cep, street, number, complement, neighborhood, city, state },
       });
+
+      if (profile.isTeacher) {
+        await updateTeacherProfile(user.uid, {
+          userEmail: user.email || "",
+          userName: displayName,
+          phone,
+          bio: teacherBio,
+          city,
+          state,
+          neighborhood,
+          photoURL: profile.photoURL || "",
+          specialties: teacherSpecialties,
+          pricePerHour: teacherPricePerHour ? Number(teacherPricePerHour) : 0,
+          levels: teacherLevels,
+          modalities: teacherModalities,
+        });
+      }
+
       setProfile((prev) =>
         prev
           ? {
@@ -119,7 +165,12 @@ export default function ProfilePage() {
     setUploadingPhoto(true);
     try {
       const url = await uploadProfilePhoto(user.uid, file);
-      setProfile((prev) => (prev ? { ...prev, photoURL: url } : prev));
+      setProfile((prev) => {
+        if (prev?.isTeacher) {
+          updateTeacherProfile(user.uid, { photoURL: url });
+        }
+        return prev ? { ...prev, photoURL: url } : prev;
+      });
       toast.success("Foto atualizada!");
     } catch {
       toast.error("Erro ao enviar foto.");
@@ -463,6 +514,136 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
+
+        {/* Teacher Profile Section */}
+        {profile?.isTeacher && (
+          <div className="bg-[#141211] rounded-2xl p-6 border border-[#22201e] space-y-5">
+            <div className="flex items-center gap-2">
+              <GraduationCap size={18} className="text-[#ef7c2c]" />
+              <h3 className="text-sm font-bold uppercase tracking-wider text-surface-400">Perfil de Professor de Música</h3>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="teacher-bio-textarea" className="block text-xs text-surface-400 mb-1.5">Metodologia e Apresentação das Aulas</label>
+                <textarea
+                  id="teacher-bio-textarea"
+                  value={teacherBio}
+                  onChange={(e) => setTeacherBio(e.target.value)}
+                  placeholder="Fale sobre sua experiência didática, método de ensino, etc..."
+                  rows={4}
+                  className={`${inputBase} resize-none`}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="teacher-price-input" className="block text-xs text-surface-400 mb-1.5">Preço por Hora/Aula (R$)</label>
+                  <input
+                    type="number"
+                    id="teacher-price-input"
+                    value={teacherPricePerHour}
+                    onChange={(e) => setTeacherPricePerHour(e.target.value)}
+                    placeholder="Ex: 80"
+                    className={inputBase}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <span className="block text-xs text-surface-400 mb-2">Instrumentos e Especialidades</span>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {TEACHER_SPECIALTIES_LIST.map((spec) => {
+                    const isSelected = teacherSpecialties.includes(spec);
+                    return (
+                      <label key={spec} className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs cursor-pointer select-none transition-all ${
+                        isSelected 
+                          ? "bg-indigo-500/10 border-indigo-500/30 text-indigo-300" 
+                          : "bg-[#181615] border-[#2a2827] text-surface-400 hover:text-white"
+                      }`}>
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setTeacherSpecialties([...teacherSpecialties, spec]);
+                            } else {
+                              setTeacherSpecialties(teacherSpecialties.filter((s) => s !== spec));
+                            }
+                          }}
+                          className="rounded border-[#2a2827] bg-[#181615] text-[#ef7c2c] focus:ring-[#ef7c2c]/30"
+                        />
+                        {spec}
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <span className="block text-xs text-surface-400 mb-2">Níveis Atendidos</span>
+                  <div className="flex flex-col gap-2">
+                    {TEACHER_LEVELS_LIST.map((level) => {
+                      const isSelected = teacherLevels.includes(level);
+                      return (
+                        <label key={level} className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs cursor-pointer select-none transition-all ${
+                          isSelected 
+                            ? "bg-indigo-500/10 border-indigo-500/30 text-indigo-300" 
+                            : "bg-[#181615] border-[#2a2827] text-surface-400 hover:text-white"
+                        }`}>
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setTeacherLevels([...teacherLevels, level]);
+                              } else {
+                                setTeacherLevels(teacherLevels.filter((l) => l !== level));
+                              }
+                            }}
+                            className="rounded border-[#2a2827] bg-[#181615] text-[#ef7c2c] focus:ring-[#ef7c2c]/30"
+                          />
+                          {level}
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <span className="block text-xs text-surface-400 mb-2">Modalidade das Aulas</span>
+                  <div className="flex flex-col gap-2">
+                    {TEACHER_MODALITIES_LIST.map((mod) => {
+                      const isSelected = teacherModalities.includes(mod);
+                      return (
+                        <label key={mod} className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs cursor-pointer select-none transition-all ${
+                          isSelected 
+                            ? "bg-indigo-500/10 border-indigo-500/30 text-indigo-300" 
+                            : "bg-[#181615] border-[#2a2827] text-surface-400 hover:text-white"
+                        }`}>
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setTeacherModalities([...teacherModalities, mod]);
+                              } else {
+                                setTeacherModalities(teacherModalities.filter((m) => m !== mod));
+                              }
+                            }}
+                            className="rounded border-[#2a2827] bg-[#181615] text-[#ef7c2c] focus:ring-[#ef7c2c]/30"
+                          />
+                          {mod}
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Save Button */}
         <button

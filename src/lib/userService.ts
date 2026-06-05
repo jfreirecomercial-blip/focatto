@@ -3,7 +3,7 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "../firebase";
 import {
   ADMIN_EMAILS, ROLES, type UserRole, type UserData, type UserAddress,
-  type VerificationRequest, type VerificationStatus,
+  type VerificationRequest, type VerificationStatus, type TeacherData,
 } from "./roles";
 
 const DEFAULT_ADDRESS: UserAddress = {
@@ -38,6 +38,7 @@ export async function ensureUserDocument(uid: string, email: string | null, disp
     role: isAdmin ? ROLES.ADMIN : ROLES.USER,
     isVerified: false,
     isProfessional: false,
+    isTeacher: false,
     verificationStatus: "none",
     createdAt: Date.now(),
     updatedAt: Date.now(),
@@ -162,6 +163,20 @@ export async function getProfessionalUsers(): Promise<UserData[]> {
   }
 }
 
+export async function getTeacherUsers(): Promise<UserData[]> {
+  try {
+    const q = query(
+      collection(db, "users"),
+      where("isTeacher", "==", true),
+      orderBy("createdAt", "desc"),
+    );
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => ({ uid: d.id, ...d.data() } as unknown as UserData));
+  } catch {
+    return [];
+  }
+}
+
 export async function getAllUsers(): Promise<UserData[]> {
   try {
     const q = query(collection(db, "users"), orderBy("createdAt", "desc"));
@@ -189,6 +204,43 @@ export async function adminSetUserVerified(uid: string, isVerified: boolean) {
 export async function adminSetUserProfessional(uid: string, isProfessional: boolean) {
   const userRef = doc(db, "users", uid);
   await updateDoc(userRef, { isProfessional, updatedAt: Date.now() });
+}
+
+export async function adminSetUserTeacher(uid: string, isTeacher: boolean) {
+  const userRef = doc(db, "users", uid);
+  await updateDoc(userRef, { isTeacher, updatedAt: Date.now() });
+}
+
+export async function getTeacherProfile(uid: string): Promise<TeacherData | null> {
+  try {
+    const docRef = doc(db, "teachers", uid);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      return { id: docSnap.id, ...docSnap.data() } as TeacherData;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export async function updateTeacherProfile(uid: string, data: Partial<TeacherData>) {
+  const docRef = doc(db, "teachers", uid);
+  const docSnap = await getDoc(docRef);
+
+  if (docSnap.exists()) {
+    await updateDoc(docRef, {
+      ...data,
+      updatedAt: Date.now(),
+    });
+  } else {
+    await setDoc(docRef, {
+      userId: uid,
+      ...data,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+  }
 }
 
 export async function reviewVerification(

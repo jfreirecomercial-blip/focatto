@@ -44,6 +44,26 @@ export interface ProductData {
   reviewedAt: number;
 }
 
+export interface TeacherData {
+  id?: string;
+  userId: string;
+  userEmail: string;
+  userName: string;
+  phone: string;
+  bio: string;
+  city: string;
+  state: string;
+  neighborhood: string;
+  photoURL?: string;
+  rating?: number;
+  specialties: string[];
+  pricePerHour?: number;
+  levels?: string[];
+  modalities?: string[];
+  createdAt: number;
+  updatedAt: number;
+}
+
 export interface UserData {
   uid: string;
   email: string;
@@ -56,6 +76,7 @@ export interface UserData {
   role: UserRole;
   isVerified: boolean;
   isProfessional: boolean;
+  isTeacher?: boolean;
   verificationStatus: VerificationStatus;
   createdAt: number;
   updatedAt: number;
