@@ -2,7 +2,16 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../contexts/AuthContext";
-import { getUserData, updateUserProfile, uploadProfilePhoto, submitVerificationRequest, getTeacherProfile, updateTeacherProfile } from "../../lib/userService";
+import {
+  getUserData,
+  updateUserProfile,
+  uploadProfilePhoto,
+  submitVerificationRequest,
+  getTeacherProfile,
+  updateTeacherProfile,
+  getLuthierProfile,
+  updateLuthierProfile,
+} from "../../lib/userService";
 import type { UserData, VerificationStatus } from "../../lib/roles";
 import Link from "next/link";
 import {
@@ -22,6 +31,7 @@ import {
   Spinner,
   Package,
   GraduationCap,
+  Wrench,
 } from "@phosphor-icons/react";
 import { toast } from "sonner";
 
@@ -39,6 +49,18 @@ const TEACHER_SPECIALTIES_LIST = [
 
 const TEACHER_LEVELS_LIST = ["Iniciante", "Intermediário", "Avançado"];
 const TEACHER_MODALITIES_LIST = ["Presencial", "Online"];
+
+const LUTHIER_SPECIALTIES_LIST = [
+  "Regulagem",
+  "Construção",
+  "Customização",
+  "Pintura / Acabamento",
+  "Restauro",
+  "Trastes (Refret)",
+  "Eletrônica",
+  "Instalação de Captadores",
+  "Outros",
+];
 
 export default function ProfilePage() {
   const { user, logout } = useAuth();
@@ -75,6 +97,15 @@ export default function ProfilePage() {
   const [premiumTier, setPremiumTier] = useState<1 | 2>(1); // default to 1 (Pro / Complete)
   const [submittingPremium, setSubmittingPremium] = useState(false);
 
+  // Activity / Role toggles
+  const [isProfessional, setIsProfessional] = useState(false);
+  const [isTeacher, setIsTeacher] = useState(false);
+
+  // Luthier profile states
+  const [luthierBio, setLuthierBio] = useState("");
+  const [luthierSpecialties, setLuthierSpecialties] = useState<string[]>([]);
+  const [luthierRating, setLuthierRating] = useState(5.0);
+
   // Teacher profile states
   const [teacherBio, setTeacherBio] = useState("");
   const [teacherSpecialties, setTeacherSpecialties] = useState<string[]>([]);
@@ -100,6 +131,9 @@ export default function ProfilePage() {
         setCity(data.address.city);
         setState(data.address.state);
 
+        setIsProfessional(data.isProfessional || false);
+        setIsTeacher(data.isTeacher || false);
+
         if (data.isTeacher) {
           const tData = await getTeacherProfile(user.uid);
           if (tData) {
@@ -108,6 +142,15 @@ export default function ProfilePage() {
             setTeacherPricePerHour(tData.pricePerHour ? String(tData.pricePerHour) : "");
             setTeacherLevels(tData.levels || []);
             setTeacherModalities(tData.modalities || []);
+          }
+        }
+
+        if (data.isProfessional) {
+          const lData = await getLuthierProfile(user.uid);
+          if (lData) {
+            setLuthierBio(lData.bio || "");
+            setLuthierSpecialties(lData.specialties || []);
+            setLuthierRating(lData.averageRating || 5.0);
           }
         }
       }
@@ -125,9 +168,11 @@ export default function ProfilePage() {
         cpfCnpj,
         bio,
         address: { cep, street, number, complement, neighborhood, city, state },
+        isProfessional,
+        isTeacher,
       });
 
-      if (profile.isTeacher) {
+      if (isTeacher) {
         await updateTeacherProfile(user.uid, {
           userEmail: user.email || "",
           userName: displayName,
@@ -144,6 +189,21 @@ export default function ProfilePage() {
         });
       }
 
+      if (isProfessional) {
+        await updateLuthierProfile(user.uid, {
+          userEmail: user.email || "",
+          name: displayName,
+          phone,
+          bio: luthierBio,
+          city,
+          state,
+          neighborhood,
+          photo: profile.photoURL || "",
+          specialties: luthierSpecialties,
+          averageRating: luthierRating || 5.0,
+        });
+      }
+
       setProfile((prev) =>
         prev
           ? {
@@ -153,6 +213,8 @@ export default function ProfilePage() {
               cpfCnpj,
               bio,
               address: { cep, street, number, complement, neighborhood, city, state },
+              isProfessional,
+              isTeacher,
               updatedAt: Date.now(),
             }
           : prev,
@@ -174,6 +236,9 @@ export default function ProfilePage() {
       setProfile((prev) => {
         if (prev?.isTeacher) {
           updateTeacherProfile(user.uid, { photoURL: url });
+        }
+        if (prev?.isProfessional) {
+          updateLuthierProfile(user.uid, { photo: url });
         }
         return prev ? { ...prev, photoURL: url } : prev;
       });
@@ -571,8 +636,114 @@ export default function ProfilePage() {
           </div>
         </div>
 
+        {/* Atividades no Focatto */}
+        <div className="bg-[#141211] rounded-2xl p-6 border border-[#22201e] space-y-4">
+          <div className="flex items-center gap-2">
+            <Compass size={18} className="text-[#ef7c2c]" />
+            <h3 className="text-sm font-bold uppercase tracking-wider text-surface-400">Atividades no Focatto</h3>
+          </div>
+          <p className="text-xs text-surface-400">
+            Habilite as opções abaixo se você deseja oferecer serviços de luthieria ou dar aulas de música na plataforma.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <label className={`flex-1 flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all ${
+              isProfessional 
+                ? "bg-[#ef7c2c]/5 border-[#ef7c2c]/30 text-white" 
+                : "bg-[#181615] border-[#2a2827] text-surface-400 hover:text-white"
+            }`}>
+              <div className="flex items-center gap-3">
+                <Wrench size={20} className={isProfessional ? "text-[#ef7c2c]" : "text-surface-500"} />
+                <div className="text-left">
+                  <p className="text-xs font-bold">Luthier Especializado</p>
+                  <p className="text-[10px] text-surface-400">Oferecer serviços de regulagem/reparos</p>
+                </div>
+              </div>
+              <input
+                type="checkbox"
+                checked={isProfessional}
+                onChange={(e) => setIsProfessional(e.target.checked)}
+                className="rounded border-[#2a2827] bg-[#181615] text-[#ef7c2c] focus:ring-[#ef7c2c]/30"
+              />
+            </label>
+
+            <label className={`flex-1 flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all ${
+              isTeacher 
+                ? "bg-indigo-500/5 border-indigo-500/30 text-white" 
+                : "bg-[#181615] border-[#2a2827] text-surface-400 hover:text-white"
+            }`}>
+              <div className="flex items-center gap-3">
+                <GraduationCap size={20} className={isTeacher ? "text-indigo-400" : "text-surface-500"} />
+                <div className="text-left">
+                  <p className="text-xs font-bold">Professor de Música</p>
+                  <p className="text-[10px] text-surface-400">Oferecer aulas de música</p>
+                </div>
+              </div>
+              <input
+                type="checkbox"
+                checked={isTeacher}
+                onChange={(e) => setIsTeacher(e.target.checked)}
+                className="rounded border-[#2a2827] bg-[#181615] text-[#ef7c2c] focus:ring-[#ef7c2c]/30"
+              />
+            </label>
+          </div>
+        </div>
+
+        {/* Luthier Profile Section */}
+        {isProfessional && (
+          <div className="bg-[#141211] rounded-2xl p-6 border border-[#22201e] space-y-5">
+            <div className="flex items-center gap-2">
+              <Wrench size={18} className="text-[#ef7c2c]" />
+              <h3 className="text-sm font-bold uppercase tracking-wider text-surface-400">Perfil de Luthier Especializado</h3>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="luthier-bio-textarea" className="block text-xs text-surface-400 mb-1.5">Apresentação e Serviços Oferecidos</label>
+                <textarea
+                  id="luthier-bio-textarea"
+                  value={luthierBio}
+                  onChange={(e) => setLuthierBio(e.target.value)}
+                  placeholder="Fale sobre sua experiência como luthier, oficina, serviços realizados, etc..."
+                  rows={4}
+                  className={`${inputBase} resize-none`}
+                />
+              </div>
+
+              <div>
+                <span className="block text-xs text-surface-400 mb-2">Especialidades e Serviços</span>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {LUTHIER_SPECIALTIES_LIST.map((spec) => {
+                    const isSelected = luthierSpecialties.includes(spec);
+                    return (
+                      <label key={spec} className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs cursor-pointer select-none transition-all ${
+                        isSelected 
+                          ? "bg-[#ef7c2c]/10 border-[#ef7c2c]/30 text-[#ef7c2c]" 
+                          : "bg-[#181615] border-[#2a2827] text-surface-400 hover:text-white"
+                      }`}>
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setLuthierSpecialties([...luthierSpecialties, spec]);
+                            } else {
+                              setLuthierSpecialties(luthierSpecialties.filter((s) => s !== spec));
+                            }
+                          }}
+                          className="rounded border-[#2a2827] bg-[#181615] text-[#ef7c2c] focus:ring-[#ef7c2c]/30"
+                        />
+                        {spec}
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Teacher Profile Section */}
-        {profile?.isTeacher && (
+        {isTeacher && (
           <div className="bg-[#141211] rounded-2xl p-6 border border-[#22201e] space-y-5">
             <div className="flex items-center gap-2">
               <GraduationCap size={18} className="text-[#ef7c2c]" />

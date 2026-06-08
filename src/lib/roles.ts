@@ -64,6 +64,24 @@ export interface TeacherData {
   updatedAt: number;
 }
 
+export interface LuthierData {
+  id?: string;
+  userId: string;
+  userEmail: string;
+  name: string;
+  phone: string;
+  bio: string;
+  city: string;
+  state: string;
+  neighborhood: string;
+  photo?: string;
+  averageRating?: number;
+  specialties: string[];
+  createdAt: number;
+  updatedAt: number;
+}
+
+
 export interface UserData {
   uid: string;
   email: string;
