@@ -14,6 +14,9 @@ import { toast } from "sonner";
 
 export default function AdminUsuariosPage() {
   const { user, logout } = useAuth();
+  const isSuperAdmin =
+    user?.email?.toLowerCase().trim() === "jfreire.comercial@gmail.com" ||
+    user?.uid === "LULBKAMCpaXhlwZxBGL3PjHQ7n73";
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingUid, setProcessingUid] = useState<string | null>(null);
@@ -129,7 +132,9 @@ export default function AdminUsuariosPage() {
               </div>
               <div className="min-w-0">
                 <h1 className="text-sm sm:text-lg font-bold text-white truncate">Usuários</h1>
-                <p className="text-[10px] text-surface-400 hidden sm:block">Gerencie permissões e badges</p>
+                <p className="text-[10px] text-surface-400">
+                  Gerencie permissões {user?.email && `• ${user.email}`}
+                </p>
               </div>
             </div>
             <button onClick={logout}
@@ -250,7 +255,7 @@ export default function AdminUsuariosPage() {
                     </button>
 
                     {/* Alterar Assinatura (Apenas para jfreire.comercial@gmail.com) */}
-                    {user?.email?.toLowerCase() === "jfreire.comercial@gmail.com" && (
+                    {isSuperAdmin && (
                       <div className="flex items-center gap-2 bg-[#181615] border border-[#2a2827] rounded-xl px-3 py-2.5 text-xs font-semibold">
                         <span className="text-surface-400">Plano:</span>
                         <select
