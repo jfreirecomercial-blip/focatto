@@ -250,7 +250,7 @@ export default function AdminUsuariosPage() {
                     </button>
 
                     {/* Alterar Assinatura (Apenas para jfreire.comercial@gmail.com) */}
-                    {user?.email === "jfreire.comercial@gmail.com" && (
+                    {user?.email?.toLowerCase() === "jfreire.comercial@gmail.com" && (
                       <div className="flex items-center gap-2 bg-[#181615] border border-[#2a2827] rounded-xl px-3 py-2.5 text-xs font-semibold">
                         <span className="text-surface-400">Plano:</span>
                         <select

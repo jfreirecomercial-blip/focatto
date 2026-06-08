@@ -1194,6 +1194,9 @@ export default function HomePage() {
             <a href="/cookies" id="footer-link-cookies" className="hover:text-surface-300 transition-colors">
               Política de Cookies
             </a>
+            <a href="/plans" id="footer-link-plans" className="hover:text-surface-300 transition-colors">
+              Planos de Assinatura
+            </a>
             <a href="/suporte" id="footer-link-suporte" className="hover:text-surface-300 transition-colors">
               Contato de Suporte
             </a>

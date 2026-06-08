@@ -1,0 +1,60 @@
+[
+  {
+    "id": "focatto-plus",
+    "name": "Focatto Plus",
+    "tier": "tier2",
+    "priceMonthly": 29.90,
+    "priceYearlyMonthly": 24.90,
+    "features": [
+      "Exposição Média nas pesquisas (1.8x)",
+      "Até 15 anúncios ativos simultaneamente",
+      "WhatsApp direto nos cards dos anúncios",
+      "Selo 'Verificado' automático no perfil",
+      "Contato direto de compradores interessados"
+    ],
+    "highlight": false,
+    "status": "active",
+    "icon": "wrench",
+    "description": "Ideal para profissionais autônomos e professores de música que buscam visibilidade intermediária e contato rápido com clientes."
+  },
+  {
+    "id": "focatto-pro",
+    "name": "Focatto Pro",
+    "tier": "tier1",
+    "priceMonthly": 79.90,
+    "priceYearlyMonthly": 74.90,
+    "features": [
+      "Exposição Máxima em todas as listagens (3.0x)",
+      "Anúncios ILIMITADOS na plataforma",
+      "WhatsApp direto nos cards de todos os anúncios",
+      "Selo 'Pro' de destaque automático no perfil",
+      "Suporte prioritário da equipe Focatto",
+      "Prioridade nos resultados de busca do mapa"
+    ],
+    "highlight": true,
+    "status": "active",
+    "icon": "crown",
+    "badgeText": "Melhor Compra",
+    "description": "O pacote completo. Perfeito para lojas de instrumentos, luthiers com grande volume de serviços e escolas de música que querem dominar o mercado local."
+  },
+  {
+    "id": "banner-carrossel",
+    "name": "Banner Carrossel Premium",
+    "tier": "banner_carousel",
+    "priceMonthly": 149.00,
+    "priceYearlyMonthly": 129.00,
+    "features": [
+      "Destaque absoluto no topo da Home Page da Focatto",
+      "Rotação automática no carrossel de patrocinados",
+      "Mini-vitrine interna com até 4 produtos em destaque no banner",
+      "Link direto ('CTA') para a página do seu perfil profissional",
+      "Painel de Analytics com impressões e cliques do seu banner",
+      "Limite estrito de anunciantes no topo (mantém a exclusividade)"
+    ],
+    "highlight": false,
+    "status": "future",
+    "icon": "megaphone",
+    "badgeText": "Em Breve",
+    "description": "O espaço publicitário mais valioso do site. Garanta visibilidade instantânea para todos os visitantes que entrarem na plataforma."
+  }
+]
