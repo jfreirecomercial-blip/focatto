@@ -17,7 +17,16 @@ const CATEGORIES = [
   "Acessório", "Equipamento de Áudio", "Outro",
 ];
 
-const CONDITIONS = ["Novo", "Como novo", "Excelente", "Bom", "Regular", "Para peças"];
+const DEFAULT_CONDITIONS = ["Novo", "Como novo", "Excelente", "Bom", "Regular", "Para peças"];
+const STRING_INSTRUMENT_CONDITIONS = ["Novo", "Usado impecável", "Usado com marcas de uso", "Usado relic", "Usado heavy relic"];
+
+function getConditionsForCategory(cat: string) {
+  const stringCats = ["Guitarra", "Violão", "Baixo", "Violino"];
+  if (stringCats.includes(cat)) {
+    return STRING_INSTRUMENT_CONDITIONS;
+  }
+  return DEFAULT_CONDITIONS;
+}
 
 export default function MeusAnunciosPage() {
   const { user, logout } = useAuth();
@@ -29,7 +38,15 @@ export default function MeusAnunciosPage() {
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState(CATEGORIES[0]);
-  const [condition, setCondition] = useState(CONDITIONS[0]);
+  const [condition, setCondition] = useState(getConditionsForCategory(CATEGORIES[0])[0]);
+
+  const handleCategoryChange = (newCat: string) => {
+    setCategory(newCat);
+    const newConditions = getConditionsForCategory(newCat);
+    if (!newConditions.includes(condition)) {
+      setCondition(newConditions[0]);
+    }
+  };
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [photos, setPhotos] = useState<File[]>([]);
@@ -98,7 +115,7 @@ export default function MeusAnunciosPage() {
       setDescription("");
       setPrice("");
       setCategory(CATEGORIES[0]);
-      setCondition(CONDITIONS[0]);
+      setCondition(getConditionsForCategory(CATEGORIES[0])[0]);
       setCity("");
       setState("");
       setPhotos([]);
@@ -212,7 +229,7 @@ export default function MeusAnunciosPage() {
 
               <div>
                 <label htmlFor="announcement-category-select" className="block text-xs text-surface-400 mb-1.5">Categoria</label>
-                <select id="announcement-category-select" value={category} onChange={(e) => setCategory(e.target.value)} className={inputBase}>
+                <select id="announcement-category-select" value={category} onChange={(e) => handleCategoryChange(e.target.value)} className={inputBase}>
                   {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
@@ -220,7 +237,7 @@ export default function MeusAnunciosPage() {
               <div>
                 <label htmlFor="announcement-condition-select" className="block text-xs text-surface-400 mb-1.5">Estado do produto</label>
                 <select id="announcement-condition-select" value={condition} onChange={(e) => setCondition(e.target.value)} className={inputBase}>
-                  {CONDITIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+                  {getConditionsForCategory(category).map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
 
