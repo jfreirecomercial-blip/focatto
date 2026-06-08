@@ -845,8 +845,8 @@ export default function HomePage() {
 
                           {/* Info Column */}
                           <div className="min-w-0 flex-1">
-                            <h4 className="text-sm font-bold text-white tracking-wide font-body truncate flex items-center gap-1.5">
-                              <span className="truncate">{item.title}</span>
+                            <h4 className="text-sm font-bold text-white tracking-wide font-body flex items-center gap-1.5 min-w-0">
+                              <span className="block truncate">{item.title}</span>
                               {item.premiumTier === "tier1" && (
                                 <span className="bg-[#ef7c2c]/10 text-[#ef7c2c] border border-[#ef7c2c]/30 text-[9px] font-extrabold px-1.5 rounded uppercase tracking-wider flex-shrink-0">PRO</span>
                               )}
@@ -854,11 +854,13 @@ export default function HomePage() {
                                 <span className="bg-indigo-500/10 text-indigo-400 border border-indigo-500/30 text-[9px] font-extrabold px-1.5 rounded uppercase tracking-wider flex-shrink-0">PLUS</span>
                               )}
                             </h4>
-                            <div className="flex items-center gap-2 mt-1 text-[11px] text-surface-400">
-                              <span className="flex items-center gap-1 font-medium truncate">
-                                <MapPin size={10} className="text-[#8c8885]" />
-                                {item.city}, {item.state}
-                                {item.neighborhood ? ` (${item.neighborhood})` : ""}
+                            <div className="flex items-center gap-2 mt-1 text-[11px] text-surface-400 min-w-0">
+                              <span className="flex items-center gap-1 font-medium min-w-0">
+                                <MapPin size={10} className="text-[#8c8885] flex-shrink-0" />
+                                <span className="block truncate">
+                                  {item.city}, {item.state}
+                                  {item.neighborhood ? ` (${item.neighborhood})` : ""}
+                                </span>
                               </span>
                               {(item.type === "luthier" || item.type === "teacher") && item.rating && (
                                 <span className="flex items-center gap-0.5 text-amber-400 font-semibold flex-shrink-0">
