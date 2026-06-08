@@ -503,13 +503,13 @@ export default function AdminPage() {
           </div>
 
           {/* Tabs */}
-          <div className="flex flex-wrap gap-2 mb-8">
+          <div className="flex overflow-x-auto pb-2 gap-2 mb-8 scrollbar-hide flex-nowrap -mx-4 px-4 sm:mx-0 sm:px-0 scroll-smooth">
             {tabs.map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
                 id={`admin-tab-btn-${tab.key}`}
-                className={`flex items-center gap-2 text-xs font-semibold py-2.5 px-4 rounded-xl transition-all ${
+                className={`flex items-center gap-2 text-xs font-semibold py-2.5 px-4 rounded-xl transition-all flex-shrink-0 whitespace-nowrap ${
                   activeTab === tab.key
                     ? "bg-gradient-to-r from-[#ef7c2c] to-[#d4ae12] text-white shadow-lg shadow-[#ef7c2c]/20"
                     : "bg-[#181615] text-surface-400 border border-[#2a2827] hover:border-[#ef7c2c]/30 hover:text-white"

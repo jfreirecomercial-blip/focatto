@@ -17,7 +17,8 @@ import {
   Faders,
   X,
   GraduationCap,
-  Plus
+  Plus,
+  ArrowLeft
 } from "@phosphor-icons/react";
 import { useAuth } from "../contexts/AuthContext";
 import LoginModal from "../components/LoginModal";
@@ -121,10 +122,12 @@ export default function HomePage() {
   const [sortBy, setSortBy] = useState<"priceAsc" | "priceDesc" | null>(null);
   const [viewMode, setViewMode] = useState<"photo" | "map">("photo");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [mobileView, setMobileView] = useState<"list" | "details">("list");
 
   // Handle dropdown category changes and sync with activeTab
   const handleCategoryChange = (cat: "todas" | "instrumentos" | "acessorios" | "luthier" | "professor") => {
     setSelectedCategory(cat);
+    setMobileView("list");
     if (cat === "luthier") {
       setActiveTab("luthiers");
     } else if (cat === "professor") {
@@ -137,6 +140,7 @@ export default function HomePage() {
   // Sync tab clicks back to selectedCategory dropdown
   const handleTabChange = (tab: "produtos" | "luthiers" | "professores") => {
     setActiveTab(tab);
+    setMobileView("list");
     if (tab === "produtos") {
       setSelectedCategory("todas");
     } else if (tab === "luthiers") {
@@ -622,10 +626,10 @@ export default function HomePage() {
                 <button
                   onClick={() => setShowAnunciarModal(true)}
                   id="nav-anunciar"
-                  className="flex items-center gap-1.5 py-2 px-4 rounded-xl bg-gradient-to-r from-[#ef7c2c] to-[#d4ae12] text-white text-xs font-bold transition-all duration-200 hover:shadow-[0_4px_15px_rgba(239,124,44,0.4)] hover:scale-[1.03] active:scale-[0.97] cursor-pointer"
+                  className="flex items-center gap-1.5 py-2 px-3 sm:px-4 rounded-xl bg-gradient-to-r from-[#ef7c2c] to-[#d4ae12] text-white text-xs font-bold transition-all duration-200 hover:shadow-[0_4px_15px_rgba(239,124,44,0.4)] hover:scale-[1.03] active:scale-[0.97] cursor-pointer"
                 >
                   <Plus size={14} weight="bold" />
-                  Anunciar
+                  <span className="hidden sm:inline">Anunciar</span>
                 </button>
                 {userRole === ROLES.ADMIN && (
                   <a
@@ -653,7 +657,7 @@ export default function HomePage() {
                 <button
                   onClick={logout}
                   id="btn-logout"
-                  className="text-xs text-surface-400 hover:text-white transition-colors py-2 px-3 rounded-lg border border-[#2a2827] hover:border-[#ef7c2c]/30"
+                  className="text-xs text-surface-400 hover:text-white transition-colors py-2 px-3 rounded-lg border border-[#2a2827] hover:border-[#ef7c2c]/30 hidden sm:block"
                 >
                   Sair
                 </button>
@@ -663,10 +667,10 @@ export default function HomePage() {
                 <button
                   onClick={() => setShowLogin(true)}
                   id="nav-anunciar-loggedout"
-                  className="flex items-center gap-1.5 py-2 px-4 rounded-xl bg-gradient-to-r from-[#ef7c2c] to-[#d4ae12] text-white text-xs font-bold transition-all duration-200 hover:shadow-[0_4px_15px_rgba(239,124,44,0.4)] hover:scale-[1.03] active:scale-[0.97] cursor-pointer"
+                  className="flex items-center gap-1.5 py-2 px-3 sm:px-4 rounded-xl bg-gradient-to-r from-[#ef7c2c] to-[#d4ae12] text-white text-xs font-bold transition-all duration-200 hover:shadow-[0_4px_15px_rgba(239,124,44,0.4)] hover:scale-[1.03] active:scale-[0.97] cursor-pointer"
                 >
                   <Plus size={14} weight="bold" />
-                  Anunciar
+                  <span className="hidden sm:inline">Anunciar</span>
                 </button>
                 <button
                   onClick={() => setShowLogin(true)}
@@ -686,11 +690,11 @@ export default function HomePage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 relative z-10">
         
         {/* Navigation Tabs */}
-        <div className="flex flex-wrap gap-3 mb-6">
+        <div className="flex overflow-x-auto pb-2 gap-3 mb-6 scrollbar-hide flex-nowrap -mx-4 px-4 sm:mx-0 sm:px-0 scroll-smooth">
           <button
             onClick={() => handleTabChange("produtos")}
             id="tab-produtos"
-            className={`flex items-center gap-2 py-2.5 px-5 text-xs font-semibold rounded-xl transition-all duration-300 cursor-pointer ${
+            className={`flex items-center gap-2 py-2.5 px-5 text-xs font-semibold rounded-xl transition-all duration-300 cursor-pointer flex-shrink-0 whitespace-nowrap ${
               activeTab === "produtos" 
                 ? "bg-gradient-to-r from-[#ef7c2c] to-[#d4ae12] text-white shadow-[0_4px_15px_rgba(239,124,44,0.25)] font-bold scale-[1.02]" 
                 : "bg-[#181615] text-surface-400 hover:text-white border border-[#252322] hover:bg-[#201e1d]"
@@ -702,7 +706,7 @@ export default function HomePage() {
           <button
             onClick={() => handleTabChange("luthiers")}
             id="tab-luthiers"
-            className={`flex items-center gap-2 py-2.5 px-5 text-xs font-semibold rounded-xl transition-all duration-300 cursor-pointer ${
+            className={`flex items-center gap-2 py-2.5 px-5 text-xs font-semibold rounded-xl transition-all duration-300 cursor-pointer flex-shrink-0 whitespace-nowrap ${
               activeTab === "luthiers" 
                 ? "bg-gradient-to-r from-[#ef7c2c] to-[#d4ae12] text-white shadow-[0_4px_15px_rgba(239,124,44,0.25)] font-bold scale-[1.02]" 
                 : "bg-[#181615] text-surface-400 hover:text-white border border-[#252322] hover:bg-[#201e1d]"
@@ -714,7 +718,7 @@ export default function HomePage() {
           <button
             onClick={() => handleTabChange("professores")}
             id="tab-professores"
-            className={`flex items-center gap-2 py-2.5 px-5 text-xs font-semibold rounded-xl transition-all duration-300 cursor-pointer ${
+            className={`flex items-center gap-2 py-2.5 px-5 text-xs font-semibold rounded-xl transition-all duration-300 cursor-pointer flex-shrink-0 whitespace-nowrap ${
               activeTab === "professores" 
                 ? "bg-gradient-to-r from-[#ef7c2c] to-[#d4ae12] text-white shadow-[0_4px_15px_rgba(239,124,44,0.25)] font-bold scale-[1.02]" 
                 : "bg-[#181615] text-surface-400 hover:text-white border border-[#252322] hover:bg-[#201e1d]"
@@ -758,6 +762,32 @@ export default function HomePage() {
           </div>
         )}
 
+        {/* Mobile View Toggle Bar */}
+        <div className="md:hidden flex bg-[#141211] border border-[#22201e]/80 rounded-xl p-1.5 mb-6 gap-2">
+          <button
+            onClick={() => setMobileView("list")}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              mobileView === "list"
+                ? "bg-gradient-to-r from-[#ef7c2c] to-[#d4ae12] text-white shadow-md font-bold"
+                : "text-surface-400 hover:text-white"
+            }`}
+          >
+            <Tag size={14} />
+            Lista ({filteredItems.length})
+          </button>
+          <button
+            onClick={() => setMobileView("details")}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              mobileView === "details"
+                ? "bg-gradient-to-r from-[#ef7c2c] to-[#d4ae12] text-white shadow-md font-bold"
+                : "text-surface-400 hover:text-white"
+            }`}
+          >
+            <Compass size={14} />
+            Detalhes & Mapa
+          </button>
+        </div>
+
         <div className="grid lg:grid-cols-12 gap-8">
           
           {/* Left Panel: Desktop */}
@@ -769,7 +799,7 @@ export default function HomePage() {
           <div className="lg:col-span-9 grid md:grid-cols-12 gap-6">
             
             {/* Listings Panel */}
-            <div className="md:col-span-5 flex flex-col gap-4">
+            <div className={`md:col-span-5 flex flex-col gap-4 ${mobileView !== "list" ? "hidden md:flex" : "flex"}`}>
               <div className="bg-[#141211] rounded-2xl p-5 border border-[#22201e] flex flex-col gap-4 shadow-xl">
                 <div className="flex items-center justify-between">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-surface-400 font-body">
@@ -791,7 +821,7 @@ export default function HomePage() {
                       return (
                         <div
                           key={item.id}
-                          onClick={() => { setSelectedItem(item); setViewMode("photo"); }}
+                          onClick={() => { setSelectedItem(item); setViewMode("photo"); setMobileView("details"); }}
                           className={`p-3 rounded-xl border cursor-pointer transition-all duration-300 flex items-center gap-3 ${
                             isSelected
                               ? "bg-[#1d1b1a] border-[#ef7c2c] shadow-[0_0_12px_rgba(239,124,44,0.12)]"
@@ -882,26 +912,37 @@ export default function HomePage() {
             </div>
 
             {/* Map/Photo Panel */}
-            <div className="md:col-span-7 flex flex-col gap-4">
+            <div className={`md:col-span-7 flex flex-col gap-4 ${mobileView !== "details" ? "hidden md:flex" : "flex"}`}>
               <div className="bg-[#141211] rounded-2xl p-5 border border-[#22201e] flex flex-col gap-4 shadow-xl">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-base font-bold flex items-center gap-2 font-heading text-white">
-                      {viewMode === "photo" ? (
-                        <>
-                          <Tag size={18} className="text-[#ef7c2c]" />
-                          Visualização do Anúncio
-                        </>
-                      ) : (
-                        <>
-                          <MapPin size={18} className="text-[#ef7c2c]" />
-                          Mapa de Localização
-                        </>
-                      )}
-                    </h2>
-                    <p className="text-xs text-surface-400 mt-0.5 font-body">
-                      {viewMode === "photo" ? "Detalhes e foto do item selecionado" : "Visualização dinâmica com Leaflet"}
-                    </p>
+                <div className="flex items-center justify-between gap-3 flex-wrap sm:flex-nowrap">
+                  <div className="flex items-center gap-3">
+                    {/* Mobile Back Button */}
+                    <button
+                      onClick={() => setMobileView("list")}
+                      className="md:hidden flex items-center justify-center p-2 rounded-lg bg-[#181615] border border-[#2a2827] text-white transition-all cursor-pointer"
+                      title="Voltar para a lista"
+                      aria-label="Voltar para a lista"
+                    >
+                      <ArrowLeft size={16} />
+                    </button>
+                    <div>
+                      <h2 className="text-base font-bold flex items-center gap-2 font-heading text-white">
+                        {viewMode === "photo" ? (
+                          <>
+                            <Tag size={18} className="text-[#ef7c2c]" />
+                            Visualização do Anúncio
+                          </>
+                        ) : (
+                          <>
+                            <MapPin size={18} className="text-[#ef7c2c]" />
+                            Mapa de Localização
+                          </>
+                        )}
+                      </h2>
+                      <p className="text-xs text-surface-400 mt-0.5 font-body">
+                        {viewMode === "photo" ? "Detalhes e foto do item selecionado" : "Visualização dinâmica com Leaflet"}
+                      </p>
+                    </div>
                   </div>
                   
                   {selectedItem && (
