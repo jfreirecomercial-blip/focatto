@@ -717,7 +717,7 @@ export default function ProfilePage() {
 
             <div className="space-y-4">
               <div>
-                <label htmlFor="luthier-bio-textarea" className="block text-xs text-surface-400 mb-1.5">Apresentação e Serviços Oferecidos</label>
+                <label htmlFor="luthier-bio-textarea" className="block text-xs text-surface-400 mb-1.5">Apresentação e Serviços</label>
                 <textarea
                   id="luthier-bio-textarea"
                   value={luthierBio}
@@ -771,7 +771,7 @@ export default function ProfilePage() {
 
             <div className="space-y-4">
               <div>
-                <label htmlFor="teacher-bio-textarea" className="block text-xs text-surface-400 mb-1.5">Metodologia e Apresentação das Aulas</label>
+                <label htmlFor="teacher-bio-textarea" className="block text-xs text-surface-400 mb-1.5">Metodologia das Aulas</label>
                 <textarea
                   id="teacher-bio-textarea"
                   value={teacherBio}
@@ -1160,7 +1160,7 @@ export default function ProfilePage() {
                     <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                   </svg>
                 </span>
-                <h2 className="text-lg font-bold text-white font-display">Upgrade de Conta - Premium</h2>
+                <h2 className="text-base sm:text-lg font-bold text-white font-display">Upgrade Premium</h2>
               </div>
               <button
                 onClick={() => setShowPremiumModal(false)}
@@ -1315,7 +1315,8 @@ export default function ProfilePage() {
                 className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#ef7c2c] to-[#d4ae12] text-white font-bold text-sm transition-all duration-200 hover:shadow-[0_4px_20px_rgba(239,124,44,0.3)] active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2"
               >
                 {submittingPremium ? <Spinner size={16} className="animate-spin" /> : null}
-                Ativar Plano {premiumTier === 1 ? "Pro" : "Plus"} {premiumBilling === "yearly" ? "Anual" : "Mensal"}
+                <span className="sm:hidden">Ativar</span>
+                <span className="hidden sm:inline">Ativar Plano</span> {premiumTier === 1 ? "Pro" : "Plus"} {premiumBilling === "yearly" ? "Anual" : "Mensal"}
               </button>
 
             </div>

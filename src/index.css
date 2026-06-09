@@ -321,4 +321,16 @@
   .safe-top {
     padding-top: env(safe-area-inset-top, 0px);
   }
+
+  .text-optimize {
+    text-wrap: pretty;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  .hyphenate {
+    overflow-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
+  }
 }

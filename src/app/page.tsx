@@ -701,7 +701,8 @@ export default function HomePage() {
             }`}
           >
             <Tag size={14} weight={activeTab === "produtos" ? "fill" : "regular"} />
-            Instrumentos & Acessórios
+            <span className="sm:hidden">Instrumentos</span>
+            <span className="hidden sm:inline">Instrumentos & Acessórios</span>
           </button>
           <button
             onClick={() => handleTabChange("luthiers")}
@@ -713,7 +714,8 @@ export default function HomePage() {
             }`}
           >
             <Wrench size={14} weight={activeTab === "luthiers" ? "fill" : "regular"} />
-            Luthiers Especializados
+            <span className="sm:hidden">Luthiers</span>
+            <span className="hidden sm:inline">Luthiers Especializados</span>
           </button>
           <button
             onClick={() => handleTabChange("professores")}
@@ -725,7 +727,8 @@ export default function HomePage() {
             }`}
           >
             <GraduationCap size={14} weight={activeTab === "professores" ? "fill" : "regular"} />
-            Professores de Música
+            <span className="sm:hidden">Professores</span>
+            <span className="hidden sm:inline">Professores de Música</span>
           </button>
         </div>
 
@@ -784,7 +787,8 @@ export default function HomePage() {
             }`}
           >
             <Compass size={14} />
-            Detalhes & Mapa
+            <span className="sm:hidden">Detalhes</span>
+            <span className="hidden sm:inline">Detalhes & Mapa</span>
           </button>
         </div>
 
@@ -932,12 +936,14 @@ export default function HomePage() {
                         {viewMode === "photo" ? (
                           <>
                             <Tag size={18} className="text-[#ef7c2c]" />
-                            Visualização do Anúncio
+                            <span className="sm:hidden">Anúncio</span>
+                            <span className="hidden sm:inline">Visualização do Anúncio</span>
                           </>
                         ) : (
                           <>
                             <MapPin size={18} className="text-[#ef7c2c]" />
-                            Mapa de Localização
+                            <span className="sm:hidden">Mapa</span>
+                            <span className="hidden sm:inline">Mapa de Localização</span>
                           </>
                         )}
                       </h2>
@@ -1101,7 +1107,8 @@ export default function HomePage() {
                           </button>
                         </div>
                         <p className="text-xs text-surface-400 font-body leading-relaxed mt-2">
-                          Clique em <strong className="text-white">Ver no Mapa</strong> acima para visualizar a localização geográfica do anunciante em tempo real no mapa dinâmico.
+                          <span className="sm:hidden">Clique em <strong className="text-white">Ver no Mapa</strong> para ver a localização.</span>
+                          <span className="hidden sm:inline">Clique em <strong className="text-white">Ver no Mapa</strong> acima para visualizar a localização geográfica do anunciante em tempo real no mapa dinâmico.</span>
                         </p>
                       </div>
                     </div>

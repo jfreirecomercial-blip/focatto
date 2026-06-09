@@ -47,7 +47,8 @@ export default function PlansPage() {
           className="flex items-center gap-2 text-xs font-semibold text-surface-400 hover:text-[#ef7c2c] transition-colors mb-8 cursor-pointer"
         >
           <ArrowLeft size={16} />
-          Voltar para a Página Inicial
+          <span className="sm:hidden">Voltar</span>
+          <span className="hidden sm:inline">Voltar para a Página Inicial</span>
         </button>
 
         {/* Header */}
