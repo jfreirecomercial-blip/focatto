@@ -18,7 +18,8 @@ import {
   X,
   GraduationCap,
   Plus,
-  ArrowLeft
+  ArrowLeft,
+  ShieldCheck
 } from "@phosphor-icons/react";
 import { useAuth } from "../contexts/AuthContext";
 import LoginModal from "../components/LoginModal";
@@ -53,6 +54,8 @@ interface ItemLocation {
   category?: string;
   levels?: string[];
   modalities?: string[];
+  targetAudience?: string[];
+  omb?: string;
   phone?: string;
   bio?: string;
   premiumTier?: string;
@@ -75,9 +78,9 @@ const mockLuthiers: ItemLocation[] = [
 ];
 
 const mockTeachers: ItemLocation[] = [
-  { id: "t1", title: "João Silva - Aulas de Violão & Guitarra", city: "São Paulo", state: "SP", neighborhood: "Pinheiros", price: 80, type: "teacher", rating: 4.8, specialties: ["Violão", "Guitarra", "Teoria Musical"], levels: ["Iniciante", "Intermediário"], modalities: ["Presencial", "Online"], bio: "Professor com mais de 10 anos de experiência didática no ensino de cordas.", phone: "11999999999", premiumTier: "tier1", isPremium: true },
-  { id: "t2", title: "Aline Mendes - Técnica Vocal & Canto", city: "Rio de Janeiro", state: "RJ", neighborhood: "Copacabana", price: 120, type: "teacher", rating: 5.0, specialties: ["Canto / Técnica Vocal", "Teoria Musical"], levels: ["Iniciante", "Intermediário", "Avançado"], modalities: ["Online"], bio: "Aulas focadas em fisiologia vocal, respiração, afinação e interpretação.", phone: "21988888888", premiumTier: "tier2", isPremium: true },
-  { id: "t3", title: "Roberto K. - Aulas de Bateria", city: "Curitiba", state: "PR", neighborhood: "Centro", price: 90, type: "teacher", rating: 4.9, specialties: ["Bateria"], levels: ["Iniciante", "Intermediário", "Avançado"], modalities: ["Presencial"], bio: "Aprenda ritmos, rudimentos, leitura de partitura e grooves diversos.", phone: "41977777777" },
+  { id: "t1", title: "João Silva - Aulas de Violão & Guitarra", city: "São Paulo", state: "SP", neighborhood: "Pinheiros", price: 80, type: "teacher", rating: 4.8, specialties: ["Violão", "Guitarra", "Teoria Musical"], levels: ["Iniciante", "Intermediário"], modalities: ["Presencial", "Online"], targetAudience: ["Crianças", "Adultos"], omb: "34.567-SP", bio: "Professor com mais de 10 anos de experiência didática no ensino de cordas.", phone: "11999999999", premiumTier: "tier1", isPremium: true },
+  { id: "t2", title: "Aline Mendes - Técnica Vocal & Canto", city: "Rio de Janeiro", state: "RJ", neighborhood: "Copacabana", price: 120, type: "teacher", rating: 5.0, specialties: ["Canto / Técnica Vocal", "Teoria Musical"], levels: ["Iniciante", "Intermediário", "Avançado"], modalities: ["Online"], targetAudience: ["Adultos", "Melhor Idade"], omb: "21.904-RJ", bio: "Aulas focadas em fisiologia vocal, respiração, afinação e interpretação.", phone: "21988888888", premiumTier: "tier2", isPremium: true },
+  { id: "t3", title: "Roberto K. - Aulas de Bateria", city: "Curitiba", state: "PR", neighborhood: "Centro", price: 90, type: "teacher", rating: 4.9, specialties: ["Bateria"], levels: ["Iniciante", "Intermediário", "Avançado"], modalities: ["Presencial"], targetAudience: ["Todas as idades"], bio: "Aprenda ritmos, rudimentos, leitura de partitura e grooves diversos.", phone: "41977777777" },
 ];
 
 export default function HomePage() {
@@ -247,6 +250,8 @@ export default function HomePage() {
               photo: data.photoURL || undefined,
               levels: data.levels || [],
               modalities: data.modalities || [],
+              targetAudience: data.targetAudience || [],
+              omb: data.omb || "",
               phone: data.phone || "",
               bio: data.bio || "",
               premiumTier: data.premiumTier || undefined,
@@ -851,6 +856,11 @@ export default function HomePage() {
                           <div className="min-w-0 flex-1">
                             <h4 className="text-sm font-bold text-white tracking-wide font-body flex items-center gap-1.5 min-w-0">
                               <span className="block truncate">{item.title}</span>
+                              {item.omb && (
+                                <span className="bg-amber-500/15 text-amber-400 border border-amber-500/30 text-[9px] font-extrabold px-1.5 rounded uppercase tracking-wider flex-shrink-0" title={`Registro OMB: ${item.omb}`}>
+                                  ★ OMB
+                                </span>
+                              )}
                               {item.premiumTier === "tier1" && (
                                 <span className="bg-[#ef7c2c]/10 text-[#ef7c2c] border border-[#ef7c2c]/30 text-[9px] font-extrabold px-1.5 rounded uppercase tracking-wider flex-shrink-0">PRO</span>
                               )}
@@ -1071,6 +1081,29 @@ export default function HomePage() {
                                       {l}
                                     </span>
                                   ))}
+                                </div>
+                              </div>
+                            )}
+                            {selectedItem.targetAudience && selectedItem.targetAudience.length > 0 && (
+                              <div className="flex flex-col gap-1.5 mt-2">
+                                <span className="text-[10px] font-bold text-surface-400">Público-Alvo Atendido:</span>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {selectedItem.targetAudience.map((audience, idx) => (
+                                    <span key={idx} className="text-[10px] bg-surface-800 text-surface-300 px-2.5 py-0.5 rounded border border-surface-700">
+                                      {audience}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {selectedItem.omb && (
+                              <div className="mt-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-center gap-2.5 text-amber-300">
+                                <div className="h-7 w-7 rounded-full bg-amber-500/15 flex items-center justify-center flex-shrink-0 text-amber-400">
+                                  <ShieldCheck size={16} weight="fill" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-[10px] font-bold uppercase tracking-wider">Membro da Ordem dos Músicos</p>
+                                  <p className="text-xs text-amber-400/90 truncate font-semibold">Reg. OMB: {selectedItem.omb}</p>
                                 </div>
                               </div>
                             )}

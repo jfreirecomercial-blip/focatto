@@ -60,6 +60,7 @@ const TEACHER_SPECIALTIES_LIST = [
 
 const TEACHER_LEVELS_LIST = ["Iniciante", "Intermediário", "Avançado"];
 const TEACHER_MODALITIES_LIST = ["Presencial", "Online"];
+const TEACHER_AUDIENCES_LIST = ["Crianças", "Adultos", "Melhor Idade", "Todas as idades"];
 
 const LUTHIER_SPECIALTIES_LIST = [
   "Regulagem",
@@ -135,6 +136,8 @@ export default function ProfilePage() {
   const [teacherPricePerHour, setTeacherPricePerHour] = useState("");
   const [teacherLevels, setTeacherLevels] = useState<string[]>([]);
   const [teacherModalities, setTeacherModalities] = useState<string[]>([]);
+  const [teacherTargetAudience, setTeacherTargetAudience] = useState<string[]>([]);
+  const [teacherOmb, setTeacherOmb] = useState("");
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatPhone(e.target.value);
@@ -321,6 +324,8 @@ export default function ProfilePage() {
             setTeacherPricePerHour(tData.pricePerHour ? String(tData.pricePerHour) : "");
             setTeacherLevels(tData.levels || []);
             setTeacherModalities(tData.modalities || []);
+            setTeacherTargetAudience(tData.targetAudience || []);
+            setTeacherOmb(tData.omb || "");
           }
         }
 
@@ -375,6 +380,8 @@ export default function ProfilePage() {
           pricePerHour: teacherPricePerHour ? Number(teacherPricePerHour) : 0,
           levels: teacherLevels,
           modalities: teacherModalities,
+          targetAudience: teacherTargetAudience,
+          omb: teacherOmb,
         });
       }
 
@@ -986,6 +993,17 @@ export default function ProfilePage() {
                     className={inputBase}
                   />
                 </div>
+                <div>
+                  <label htmlFor="teacher-omb-input" className="block text-xs text-surface-400 mb-1.5">Carteira Ordem dos Músicos do Brasil (OMB) - Opcional</label>
+                  <input
+                    type="text"
+                    id="teacher-omb-input"
+                    value={teacherOmb}
+                    onChange={(e) => setTeacherOmb(e.target.value)}
+                    placeholder="Ex: 12.345-SP"
+                    className={inputBase}
+                  />
+                </div>
               </div>
 
               <div>
@@ -1077,6 +1095,36 @@ export default function ProfilePage() {
                       );
                     })}
                   </div>
+                </div>
+              </div>
+
+              <div>
+                <span className="block text-xs text-surface-400 mb-2">Público-Alvo Atendido</span>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {TEACHER_AUDIENCES_LIST.map((audience) => {
+                    const isSelected = teacherTargetAudience.includes(audience);
+                    return (
+                      <label key={audience} className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs cursor-pointer select-none transition-all ${
+                        isSelected 
+                          ? "bg-indigo-500/10 border-indigo-500/30 text-indigo-300" 
+                          : "bg-[#181615] border-[#2a2827] text-surface-400 hover:text-white"
+                      }`}>
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setTeacherTargetAudience([...teacherTargetAudience, audience]);
+                            } else {
+                              setTeacherTargetAudience(teacherTargetAudience.filter((a) => a !== audience));
+                            }
+                          }}
+                          className="rounded border-[#2a2827] bg-[#181615] text-[#ef7c2c] focus:ring-[#ef7c2c]/30"
+                        />
+                        {audience}
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
             </div>

@@ -3,13 +3,13 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { getUserData } from "../../../lib/userService";
+import { getUserData, getTeacherProfile } from "../../../lib/userService";
 import { getSellerStats, getSellerRatings } from "../../../lib/ratingService";
 import { getUserProducts } from "../../../lib/productService";
-import type { UserData, SellerStats, ProductData, RatingData } from "../../../lib/roles";
+import type { UserData, SellerStats, ProductData, RatingData, TeacherData } from "../../../lib/roles";
 import {
   ArrowLeft, Star, MapPin, ShieldCheck, WhatsappLogo, Clock,
-  Sparkle, MusicNote, HeartStraight, Smiley, Tag, Package,
+  Sparkle, MusicNote, HeartStraight, Smiley, Tag, Package, GraduationCap
 } from "@phosphor-icons/react";
 
 export default function VendedorPage() {
@@ -21,6 +21,7 @@ export default function VendedorPage() {
   const [stats, setStats] = useState<SellerStats | null>(null);
   const [ratings, setRatings] = useState<RatingData[]>([]);
   const [products, setProducts] = useState<ProductData[]>([]);
+  const [teacherProfile, setTeacherProfile] = useState<TeacherData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -37,6 +38,11 @@ export default function VendedorPage() {
       setStats(sellerStats);
       setRatings(sellerRatings);
       setProducts(sellerProducts.filter((p) => p.status === "approved"));
+
+      if (sellerData?.isTeacher) {
+        const tProfile = await getTeacherProfile(sellerId);
+        setTeacherProfile(tProfile);
+      }
 
       setLoading(false);
     }
@@ -176,6 +182,88 @@ export default function VendedorPage() {
                 </div>
               )}
             </div>
+
+            {/* Teacher Profile Section */}
+            {seller.isTeacher && teacherProfile && (
+              <div className="bg-[#141211] rounded-2xl p-6 border border-[#22201e] shadow-xl space-y-4">
+                <div className="flex items-center gap-2 pb-3 border-b border-[#22201e]">
+                  <GraduationCap size={20} className="text-[#ef7c2c]" />
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-white">Perfil de Professor de Música</h3>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {teacherProfile.pricePerHour !== undefined && teacherProfile.pricePerHour > 0 && (
+                    <div>
+                      <span className="block text-[10px] font-bold text-surface-400 uppercase tracking-wider">Valor Hora/Aula:</span>
+                      <span className="text-base font-bold text-[#ef7c2c]">R$ {teacherProfile.pricePerHour.toLocaleString("pt-BR")} / hora</span>
+                    </div>
+                  )}
+                  {teacherProfile.omb && (
+                    <div>
+                      <span className="block text-[10px] font-bold text-surface-400 uppercase tracking-wider">Registro Profissional:</span>
+                      <span className="inline-flex items-center gap-1 text-xs text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                        ★ Reg. OMB: {teacherProfile.omb}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {teacherProfile.specialties && teacherProfile.specialties.length > 0 && (
+                  <div>
+                    <span className="block text-[10px] font-bold text-surface-400 uppercase tracking-wider mb-1.5">Instrumentos & Especialidades:</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {teacherProfile.specialties.map((s, idx) => (
+                        <span key={idx} className="text-xs bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 px-2.5 py-0.5 rounded">
+                          {s}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
+                  {teacherProfile.levels && teacherProfile.levels.length > 0 && (
+                    <div>
+                      <span className="block text-[10px] font-bold text-surface-400 uppercase tracking-wider mb-1">Níveis:</span>
+                      <div className="flex flex-col gap-1">
+                        {teacherProfile.levels.map((l, idx) => (
+                          <span key={idx} className="text-xs text-surface-300">• {l}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {teacherProfile.modalities && teacherProfile.modalities.length > 0 && (
+                    <div>
+                      <span className="block text-[10px] font-bold text-surface-400 uppercase tracking-wider mb-1">Modalidades:</span>
+                      <div className="flex flex-col gap-1">
+                        {teacherProfile.modalities.map((m, idx) => (
+                          <span key={idx} className="text-xs text-surface-300">• {m}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {teacherProfile.targetAudience && teacherProfile.targetAudience.length > 0 && (
+                    <div>
+                      <span className="block text-[10px] font-bold text-surface-400 uppercase tracking-wider mb-1">Atende:</span>
+                      <div className="flex flex-col gap-1">
+                        {teacherProfile.targetAudience.map((a, idx) => (
+                          <span key={idx} className="text-xs text-surface-300">• {a}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {teacherProfile.bio && (
+                  <div className="pt-2">
+                    <span className="block text-[10px] font-bold text-surface-400 uppercase tracking-wider mb-1">Metodologia das Aulas:</span>
+                    <p className="text-xs text-surface-300 leading-relaxed whitespace-pre-wrap">{teacherProfile.bio}</p>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Fun Profile Sections */}
             {seller.sellerAbout && (

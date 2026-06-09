@@ -60,6 +60,8 @@ export interface TeacherData {
   pricePerHour?: number;
   levels?: string[];
   modalities?: string[];
+  targetAudience?: string[];
+  omb?: string;
   createdAt: number;
   updatedAt: number;
 }
