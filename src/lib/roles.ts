@@ -62,6 +62,8 @@ export interface TeacherData {
   modalities?: string[];
   targetAudience?: string[];
   omb?: string;
+  status?: VerificationStatus;
+  adminNotes?: string;
   createdAt: number;
   updatedAt: number;
 }
@@ -79,6 +81,8 @@ export interface LuthierData {
   photo?: string;
   averageRating?: number;
   specialties: string[];
+  status?: VerificationStatus;
+  adminNotes?: string;
   createdAt: number;
   updatedAt: number;
 }
@@ -98,6 +102,8 @@ export interface UserData {
   isProfessional: boolean;
   isTeacher?: boolean;
   verificationStatus: VerificationStatus;
+  luthierStatus?: VerificationStatus;
+  teacherStatus?: VerificationStatus;
   sellerAbout?: string;
   sellerMusic?: string;
   sellerHobbies?: string;

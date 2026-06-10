@@ -9,8 +9,8 @@ import {
   CheckCircle, XCircle, Spinner, ArrowLeft, GraduationCap,
 } from "@phosphor-icons/react";
 import { getPendingProducts, getProductsByCategory, getProductsByCategories, reviewProduct } from "../../lib/productService";
-import { getPendingVerifications, getAllUsers, getProfessionalUsers, getTeacherUsers, reviewVerification, adminUpdateUserRole, adminSetUserVerified, adminSetUserProfessional, adminSetUserTeacher } from "../../lib/userService";
-import type { ProductData, VerificationRequest, UserData } from "../../lib/roles";
+import { getPendingVerifications, getAllUsers, getProfessionalUsers, getTeacherUsers, reviewVerification, adminUpdateUserRole, adminSetUserVerified, adminSetUserProfessional, adminSetUserTeacher, getPendingLuthiers, getPendingTeachers, reviewLuthier, reviewTeacher } from "../../lib/userService";
+import type { ProductData, VerificationRequest, UserData, LuthierData, TeacherData } from "../../lib/roles";
 import { ROLES } from "../../lib/roles";
 import { toast } from "sonner";
 
@@ -198,6 +198,168 @@ function VerificationCard({
   );
 }
 
+function PendingLuthierCard({
+  luthier,
+  onReview,
+  reviewingId,
+  adminNotes,
+  setAdminNotes,
+}: {
+  luthier: LuthierData;
+  onReview: (uid: string, status: "approved" | "rejected") => void;
+  reviewingId: string | null;
+  adminNotes: string;
+  setAdminNotes: (v: string) => void;
+}) {
+  return (
+    <div className="bg-[#141211] rounded-2xl p-5 border border-[#22201e] space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="min-w-0 flex-1">
+          <h4 className="text-sm font-bold text-white truncate">{luthier.name}</h4>
+          <p className="text-xs text-surface-400 truncate">{luthier.userEmail} &middot; {luthier.phone}</p>
+          <p className="text-xs text-[#ef7c2c] mt-0.5 font-semibold">
+            {luthier.city}, {luthier.state} &middot; {luthier.neighborhood}
+          </p>
+        </div>
+        <span className="text-xs font-semibold px-3 py-1 rounded-full bg-amber-400/10 text-amber-400 border border-amber-400/20 flex-shrink-0">
+          Pendente Luthier
+        </span>
+      </div>
+
+      {luthier.bio && (
+        <p className="text-xs text-surface-400 leading-relaxed">{luthier.bio}</p>
+      )}
+
+      {luthier.specialties && luthier.specialties.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 pt-1">
+          {luthier.specialties.map((spec, idx) => (
+            <span key={idx} className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-[#ef7c2c]/10 text-[#ef7c2c] border border-[#ef7c2c]/20">
+              {spec}
+            </span>
+          ))}
+        </div>
+      )}
+
+      <div className="space-y-3 pt-2 border-t border-[#22201e]">
+        <textarea
+          value={adminNotes}
+          onChange={(e) => setAdminNotes(e.target.value)}
+          placeholder="Observações do administrador para aprovação ou rejeição..."
+          rows={2}
+          className={inputBase}
+        />
+        <div className="flex gap-3">
+          <button
+            onClick={() => onReview(luthier.userId, "approved")}
+            disabled={reviewingId === luthier.userId}
+            className="flex-1 py-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-semibold hover:bg-emerald-500/20 transition-colors disabled:opacity-60 flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            {reviewingId === luthier.userId ? <Spinner size={14} className="animate-spin" /> : <CheckCircle size={14} />}
+            Aprovar Luthier
+          </button>
+          <button
+            onClick={() => onReview(luthier.userId, "rejected")}
+            disabled={reviewingId === luthier.userId}
+            className="flex-1 py-2.5 rounded-xl bg-red-500/10 text-red-400 border border-red-500/20 text-xs font-semibold hover:bg-red-500/20 transition-colors disabled:opacity-60 flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            {reviewingId === luthier.userId ? <Spinner size={14} className="animate-spin" /> : <XCircle size={14} />}
+            Rejeitar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PendingTeacherCard({
+  teacher,
+  onReview,
+  reviewingId,
+  adminNotes,
+  setAdminNotes,
+}: {
+  teacher: TeacherData;
+  onReview: (uid: string, status: "approved" | "rejected") => void;
+  reviewingId: string | null;
+  adminNotes: string;
+  setAdminNotes: (v: string) => void;
+}) {
+  return (
+    <div className="bg-[#141211] rounded-2xl p-5 border border-[#22201e] space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="min-w-0 flex-1">
+          <h4 className="text-sm font-bold text-white truncate">{teacher.userName}</h4>
+          <p className="text-xs text-surface-400 truncate">{teacher.userEmail} &middot; {teacher.phone}</p>
+          <p className="text-xs text-indigo-400 mt-0.5 font-semibold">
+            {teacher.city}, {teacher.state} &middot; {teacher.neighborhood}
+            {teacher.pricePerHour ? ` &middot; R$ ${teacher.pricePerHour}/h` : ""}
+          </p>
+        </div>
+        <span className="text-xs font-semibold px-3 py-1 rounded-full bg-amber-400/10 text-amber-400 border border-amber-400/20 flex-shrink-0">
+          Pendente Professor
+        </span>
+      </div>
+
+      {teacher.bio && (
+        <p className="text-xs text-surface-400 leading-relaxed">{teacher.bio}</p>
+      )}
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-surface-400">
+        {teacher.modalities && teacher.modalities.length > 0 && (
+          <div><span className="text-surface-500">Modalidades:</span> {teacher.modalities.join(", ")}</div>
+        )}
+        {teacher.levels && teacher.levels.length > 0 && (
+          <div><span className="text-surface-500">Níveis:</span> {teacher.levels.join(", ")}</div>
+        )}
+        {teacher.targetAudience && teacher.targetAudience.length > 0 && (
+          <div><span className="text-surface-500">Público:</span> {teacher.targetAudience.join(", ")}</div>
+        )}
+        {teacher.omb && (
+          <div><span className="text-surface-500">Registro OMB:</span> {teacher.omb}</div>
+        )}
+      </div>
+
+      {teacher.specialties && teacher.specialties.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 pt-1">
+          {teacher.specialties.map((spec, idx) => (
+            <span key={idx} className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+              {spec}
+            </span>
+          ))}
+        </div>
+      )}
+
+      <div className="space-y-3 pt-2 border-t border-[#22201e]">
+        <textarea
+          value={adminNotes}
+          onChange={(e) => setAdminNotes(e.target.value)}
+          placeholder="Observações do administrador para aprovação ou rejeição..."
+          rows={2}
+          className={inputBase}
+        />
+        <div className="flex gap-3">
+          <button
+            onClick={() => onReview(teacher.userId, "approved")}
+            disabled={reviewingId === teacher.userId}
+            className="flex-1 py-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-semibold hover:bg-emerald-500/20 transition-colors disabled:opacity-60 flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            {reviewingId === teacher.userId ? <Spinner size={14} className="animate-spin" /> : <CheckCircle size={14} />}
+            Aprovar Professor
+          </button>
+          <button
+            onClick={() => onReview(teacher.userId, "rejected")}
+            disabled={reviewingId === teacher.userId}
+            className="flex-1 py-2.5 rounded-xl bg-red-500/10 text-red-400 border border-red-500/20 text-xs font-semibold hover:bg-red-500/20 transition-colors disabled:opacity-60 flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            {reviewingId === teacher.userId ? <Spinner size={14} className="animate-spin" /> : <XCircle size={14} />}
+            Rejeitar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function UserCard({
   u,
   onToggleRole,
@@ -298,6 +460,8 @@ export default function AdminPage() {
 
   const [pendingProducts, setPendingProducts] = useState<ProductData[]>([]);
   const [pendingVerifications, setPendingVerifications] = useState<VerificationRequest[]>([]);
+  const [pendingLuthiers, setPendingLuthiers] = useState<LuthierData[]>([]);
+  const [pendingTeachers, setPendingTeachers] = useState<TeacherData[]>([]);
   const [acessorioProducts, setAcessorioProducts] = useState<ProductData[]>([]);
   const [instrumentoProducts, setInstrumentoProducts] = useState<ProductData[]>([]);
   const [users, setUsers] = useState<UserData[]>([]);
@@ -307,25 +471,54 @@ export default function AdminPage() {
 
   const [productAdminNotes, setProductAdminNotes] = useState("");
   const [verAdminNotes, setVerAdminNotes] = useState("");
+  const [luthierAdminNotes, setLuthierAdminNotes] = useState("");
+  const [teacherAdminNotes, setTeacherAdminNotes] = useState("");
   const [reviewingId, setReviewingId] = useState<string | null>(null);
   const [togglingUser, setTogglingUser] = useState<string | null>(null);
   const [userSearch, setUserSearch] = useState("");
+
+  const [pendingCounts, setPendingCounts] = useState({
+    products: 0,
+    verifications: 0,
+    luthiers: 0,
+    teachers: 0,
+  });
 
   useEffect(() => {
     loadTabData();
   }, [activeTab]);
 
+  async function refreshPendingCounts() {
+    try {
+      const [prods, vers, luths, teachs] = await Promise.all([
+        getPendingProducts(),
+        getPendingVerifications(),
+        getPendingLuthiers(),
+        getPendingTeachers(),
+      ]);
+      setPendingCounts({
+        products: prods.length,
+        verifications: vers.length,
+        luthiers: luths.length,
+        teachers: teachs.length,
+      });
+      return { prods, vers, luths, teachs };
+    } catch (err) {
+      console.error("Error refreshing pending counts:", err);
+      return { prods: [], vers: [], luths: [], teachs: [] };
+    }
+  }
+
   async function loadTabData() {
     setLoading(true);
     try {
+      const { prods, vers, luths, teachs } = await refreshPendingCounts();
       switch (activeTab) {
         case "pendentes": {
-          const [prods, vers] = await Promise.all([
-            getPendingProducts(),
-            getPendingVerifications(),
-          ]);
           setPendingProducts(prods);
           setPendingVerifications(vers);
+          setPendingLuthiers(luths);
+          setPendingTeachers(teachs);
           break;
         }
         case "luthier": {
@@ -386,6 +579,36 @@ export default function AdminPage() {
       loadTabData();
     } catch {
       toast.error("Erro ao processar verificação.");
+    } finally {
+      setReviewingId(null);
+    }
+  }
+
+  async function handleLuthierReview(userId: string, status: "approved" | "rejected") {
+    if (!user) return;
+    setReviewingId(userId);
+    try {
+      await reviewLuthier(userId, status, luthierAdminNotes, user.uid);
+      toast.success(`Cadastro de luthier ${status === "approved" ? "aprovado" : "rejeitado"}!`);
+      setLuthierAdminNotes("");
+      loadTabData();
+    } catch {
+      toast.error("Erro ao processar luthier.");
+    } finally {
+      setReviewingId(null);
+    }
+  }
+
+  async function handleTeacherReview(userId: string, status: "approved" | "rejected") {
+    if (!user) return;
+    setReviewingId(userId);
+    try {
+      await reviewTeacher(userId, status, teacherAdminNotes, user.uid);
+      toast.success(`Cadastro de professor ${status === "approved" ? "aprovado" : "rejeitado"}!`);
+      setTeacherAdminNotes("");
+      loadTabData();
+    } catch {
+      toast.error("Erro ao processar professor.");
     } finally {
       setReviewingId(null);
     }
@@ -502,23 +725,72 @@ export default function AdminPage() {
             <p className="text-sm text-surface-400 mt-1">Gerencie sua plataforma Focattolecter</p>
           </div>
 
+          {/* Summary Notification Alert */}
+          {(pendingCounts.products + pendingCounts.verifications + pendingCounts.luthiers + pendingCounts.teachers) > 0 && (
+            <div className="mb-6 bg-gradient-to-r from-[#ef7c2c]/10 to-[#d4ae12]/10 border border-[#ef7c2c]/20 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <span className="flex h-2 w-2 relative">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                  </span>
+                  Aprovações Pendentes
+                </h3>
+                <p className="text-xs text-surface-400 mt-1">
+                  Você tem {pendingCounts.products + pendingCounts.verifications + pendingCounts.luthiers + pendingCounts.teachers} solicitação(ões) pendente(s) de aprovação na plataforma:
+                </p>
+                <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-[11px] text-surface-300">
+                  {pendingCounts.products > 0 && (
+                    <span>🔌 {pendingCounts.products} produto(s) / anúncio(s)</span>
+                  )}
+                  {pendingCounts.verifications > 0 && (
+                    <span>🆔 {pendingCounts.verifications} verificação(ões) de identidade</span>
+                  )}
+                  {pendingCounts.luthiers > 0 && (
+                    <span>🛠️ {pendingCounts.luthiers} perfil(is) de luthier</span>
+                  )}
+                  {pendingCounts.teachers > 0 && (
+                    <span>🎓 {pendingCounts.teachers} perfil(is) de professor</span>
+                  )}
+                </div>
+              </div>
+              {activeTab !== "pendentes" && (
+                <button
+                  onClick={() => setActiveTab("pendentes")}
+                  className="py-2 px-4 rounded-xl bg-gradient-to-r from-[#ef7c2c] to-[#d4ae12] text-white text-xs font-bold shadow-md hover:shadow-lg transition-all cursor-pointer flex-shrink-0"
+                >
+                  Ver Pendentes
+                </button>
+              )}
+            </div>
+          )}
+
           {/* Tabs */}
           <div className="flex overflow-x-auto pb-2 gap-2 mb-8 scrollbar-hide flex-nowrap -mx-4 px-4 sm:mx-0 sm:px-0 scroll-smooth">
-            {tabs.map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                id={`admin-tab-btn-${tab.key}`}
-                className={`flex items-center gap-2 text-xs font-semibold py-2.5 px-4 rounded-xl transition-all flex-shrink-0 whitespace-nowrap ${
-                  activeTab === tab.key
-                    ? "bg-gradient-to-r from-[#ef7c2c] to-[#d4ae12] text-white shadow-lg shadow-[#ef7c2c]/20"
-                    : "bg-[#181615] text-surface-400 border border-[#2a2827] hover:border-[#ef7c2c]/30 hover:text-white"
-                }`}
-              >
-                {tab.icon}
-                {tab.label}
-              </button>
-            ))}
+            {tabs.map((tab) => {
+              const isPendenteTab = tab.key === "pendentes";
+              const totalPendings = pendingCounts.products + pendingCounts.verifications + pendingCounts.luthiers + pendingCounts.teachers;
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  id={`admin-tab-btn-${tab.key}`}
+                  className={`flex items-center gap-2 text-xs font-semibold py-2.5 px-4 rounded-xl transition-all flex-shrink-0 whitespace-nowrap ${
+                    activeTab === tab.key
+                      ? "bg-gradient-to-r from-[#ef7c2c] to-[#d4ae12] text-white shadow-lg shadow-[#ef7c2c]/20"
+                      : "bg-[#181615] text-surface-400 border border-[#2a2827] hover:border-[#ef7c2c]/30 hover:text-white"
+                  }`}
+                >
+                  {tab.icon}
+                  {tab.label}
+                  {isPendenteTab && totalPendings > 0 && (
+                    <span className="ml-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                      {totalPendings}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
 
           {/* Content */}
@@ -577,6 +849,58 @@ export default function AdminPage() {
                             reviewingId={reviewingId}
                             adminNotes={verAdminNotes}
                             setAdminNotes={setVerAdminNotes}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </section>
+
+                  <section>
+                    <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                      <Wrench size={18} className="text-[#ef7c2c]" />
+                      Luthiers Pendentes
+                    </h3>
+                    {pendingLuthiers.length === 0 ? (
+                      <div className="text-center py-8 bg-[#141211] rounded-2xl border border-[#22201e]">
+                        <Wrench size={40} className="mx-auto text-surface-500 mb-2" />
+                        <p className="text-surface-400 text-sm">Nenhum luthier pendente.</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {pendingLuthiers.map((l) => (
+                          <PendingLuthierCard
+                            key={l.userId}
+                            luthier={l}
+                            onReview={handleLuthierReview}
+                            reviewingId={reviewingId}
+                            adminNotes={luthierAdminNotes}
+                            setAdminNotes={setLuthierAdminNotes}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </section>
+
+                  <section>
+                    <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                      <GraduationCap size={18} className="text-[#ef7c2c]" />
+                      Professores Pendentes
+                    </h3>
+                    {pendingTeachers.length === 0 ? (
+                      <div className="text-center py-8 bg-[#141211] rounded-2xl border border-[#22201e]">
+                        <GraduationCap size={40} className="mx-auto text-surface-500 mb-2" />
+                        <p className="text-surface-400 text-sm">Nenhum professor pendente.</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {pendingTeachers.map((t) => (
+                          <PendingTeacherCard
+                            key={t.userId}
+                            teacher={t}
+                            onReview={handleTeacherReview}
+                            reviewingId={reviewingId}
+                            adminNotes={teacherAdminNotes}
+                            setAdminNotes={setTeacherAdminNotes}
                           />
                         ))}
                       </div>

@@ -313,10 +313,10 @@ export default function ProfilePage() {
         setCity(data.address.city);
         setState(data.address.state);
 
-        setIsProfessional(data.isProfessional || false);
-        setIsTeacher(data.isTeacher || false);
+        setIsProfessional(data.isProfessional || data.luthierStatus === "pending" || false);
+        setIsTeacher(data.isTeacher || data.teacherStatus === "pending" || false);
 
-        if (data.isTeacher) {
+        if (data.isTeacher || data.teacherStatus === "pending") {
           const tData = await getTeacherProfile(user.uid);
           if (tData) {
             setTeacherBio(tData.bio || "");
@@ -329,7 +329,7 @@ export default function ProfilePage() {
           }
         }
 
-        if (data.isProfessional) {
+        if (data.isProfessional || data.luthierStatus === "pending") {
           const lData = await getLuthierProfile(user.uid);
           if (lData) {
             setLuthierBio(lData.bio || "");
@@ -352,6 +352,16 @@ export default function ProfilePage() {
 
     setSaving(true);
     try {
+      const nextLuthierStatus = isProfessional
+        ? (profile.isProfessional ? "approved" : "pending")
+        : "none";
+      const nextIsProfessional = nextLuthierStatus === "approved";
+
+      const nextTeacherStatus = isTeacher
+        ? (profile.isTeacher ? "approved" : "pending")
+        : "none";
+      const nextIsTeacher = nextTeacherStatus === "approved";
+
       await updateUserProfile(user.uid, {
         displayName,
         phone,
@@ -362,8 +372,10 @@ export default function ProfilePage() {
         sellerHobbies,
         sellerFunFacts,
         address: { cep, street, number, complement, neighborhood, city, state },
-        isProfessional,
-        isTeacher,
+        isProfessional: nextIsProfessional,
+        isTeacher: nextIsTeacher,
+        luthierStatus: nextLuthierStatus,
+        teacherStatus: nextTeacherStatus,
       });
 
       if (isTeacher) {
@@ -382,6 +394,11 @@ export default function ProfilePage() {
           modalities: teacherModalities,
           targetAudience: teacherTargetAudience,
           omb: teacherOmb,
+          status: nextTeacherStatus,
+        });
+      } else if (profile.isTeacher || profile.teacherStatus === "pending") {
+        await updateTeacherProfile(user.uid, {
+          status: "none",
         });
       }
 
@@ -397,6 +414,11 @@ export default function ProfilePage() {
           photo: profile.photoURL || "",
           specialties: luthierSpecialties,
           averageRating: luthierRating || 5.0,
+          status: nextLuthierStatus,
+        });
+      } else if (profile.isProfessional || profile.luthierStatus === "pending") {
+        await updateLuthierProfile(user.uid, {
+          status: "none",
         });
       }
 
@@ -413,8 +435,10 @@ export default function ProfilePage() {
               sellerHobbies,
               sellerFunFacts,
               address: { cep, street, number, complement, neighborhood, city, state },
-              isProfessional,
-              isTeacher,
+              isProfessional: nextIsProfessional,
+              isTeacher: nextIsTeacher,
+              luthierStatus: nextLuthierStatus,
+              teacherStatus: nextTeacherStatus,
               updatedAt: Date.now(),
             }
           : prev,
@@ -434,10 +458,10 @@ export default function ProfilePage() {
     try {
       const url = await uploadProfilePhoto(user.uid, file);
       setProfile((prev) => {
-        if (prev?.isTeacher) {
+        if (prev?.isTeacher || prev?.teacherStatus === "pending") {
           updateTeacherProfile(user.uid, { photoURL: url });
         }
-        if (prev?.isProfessional) {
+        if (prev?.isProfessional || prev?.luthierStatus === "pending") {
           updateLuthierProfile(user.uid, { photo: url });
         }
         return prev ? { ...prev, photoURL: url } : prev;
@@ -914,6 +938,28 @@ export default function ProfilePage() {
               <h3 className="text-sm font-bold uppercase tracking-wider text-surface-400">Perfil de Luthier Especializado</h3>
             </div>
 
+            {profile?.luthierStatus === "pending" && (
+              <div className="bg-amber-500/10 border border-amber-500/20 text-amber-400 p-4 rounded-xl text-xs flex items-center gap-2.5">
+                <Clock size={16} weight="fill" className="flex-shrink-0 animate-pulse" />
+                <span>Seu perfil de luthier está sob análise da moderação. Seus dados cadastrados e atualizações estarão visíveis no mapa/pesquisa apenas após aprovação.</span>
+              </div>
+            )}
+            {profile?.luthierStatus === "rejected" && (
+              <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl text-xs flex items-center gap-2.5">
+                <XCircle size={16} weight="fill" className="flex-shrink-0" />
+                <div>
+                  <p className="font-bold">Seu perfil de luthier foi rejeitado.</p>
+                  {profile.bio && <p className="mt-0.5 opacity-90">Você pode atualizar seus dados e salvar novamente para reenvio à moderação.</p>}
+                </div>
+              </div>
+            )}
+            {profile?.luthierStatus === "approved" && (
+              <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-4 rounded-xl text-xs flex items-center gap-2.5">
+                <CheckCircle size={16} weight="fill" className="flex-shrink-0" />
+                <span>Seu perfil de luthier está aprovado e ativo!</span>
+              </div>
+            )}
+
             <div className="space-y-4">
               <div>
                 <label htmlFor="luthier-bio-textarea" className="block text-xs text-surface-400 mb-1.5">Apresentação e Serviços</label>
@@ -967,6 +1013,28 @@ export default function ProfilePage() {
               <GraduationCap size={18} className="text-[#ef7c2c]" />
               <h3 className="text-sm font-bold uppercase tracking-wider text-surface-400">Perfil de Professor de Música</h3>
             </div>
+
+            {profile?.teacherStatus === "pending" && (
+              <div className="bg-amber-500/10 border border-amber-500/20 text-amber-400 p-4 rounded-xl text-xs flex items-center gap-2.5">
+                <Clock size={16} weight="fill" className="flex-shrink-0 animate-pulse" />
+                <span>Seu perfil de professor está sob análise da moderação. Seus dados cadastrados e atualizações estarão visíveis no mapa/pesquisa apenas após aprovação.</span>
+              </div>
+            )}
+            {profile?.teacherStatus === "rejected" && (
+              <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl text-xs flex items-center gap-2.5">
+                <XCircle size={16} weight="fill" className="flex-shrink-0" />
+                <div>
+                  <p className="font-bold">Seu perfil de professor foi rejeitado.</p>
+                  {profile.bio && <p className="mt-0.5 opacity-90">Você pode atualizar seus dados e salvar novamente para reenvio à moderação.</p>}
+                </div>
+              </div>
+            )}
+            {profile?.teacherStatus === "approved" && (
+              <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-4 rounded-xl text-xs flex items-center gap-2.5">
+                <CheckCircle size={16} weight="fill" className="flex-shrink-0" />
+                <span>Seu perfil de professor está aprovado e ativo!</span>
+              </div>
+            )}
 
             <div className="space-y-4">
               <div>

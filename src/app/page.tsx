@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { collection, getDocs, limit, query, where } from "firebase/firestore";
+import { collection, getDocs, limit, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
 import dynamic from "next/dynamic";
 import { 
@@ -94,6 +94,55 @@ export default function HomePage() {
   
   const [profile, setProfile] = useState<any | null>(null);
   const [showAnunciarModal, setShowAnunciarModal] = useState(false);
+  const [adminPendingCount, setAdminPendingCount] = useState(0);
+
+  useEffect(() => {
+    if (!user || userRole !== "admin" || !db) {
+      setAdminPendingCount(0);
+      return;
+    }
+
+    const prodQ = query(collection(db, "products"), where("status", "==", "pending"));
+    const verQ = query(collection(db, "verifications"), where("status", "==", "pending"));
+    const luthQ = query(collection(db, "luthiers"), where("status", "==", "pending"));
+    const teachQ = query(collection(db, "teachers"), where("status", "==", "pending"));
+
+    let prodCount = 0;
+    let verCount = 0;
+    let luthCount = 0;
+    let teachCount = 0;
+
+    const updateCount = () => {
+      setAdminPendingCount(prodCount + verCount + luthCount + teachCount);
+    };
+
+    const unsubProd = onSnapshot(prodQ, (snap) => {
+      prodCount = snap.size;
+      updateCount();
+    }, () => {});
+
+    const unsubVer = onSnapshot(verQ, (snap) => {
+      verCount = snap.size;
+      updateCount();
+    }, () => {});
+
+    const unsubLuth = onSnapshot(luthQ, (snap) => {
+      luthCount = snap.size;
+      updateCount();
+    }, () => {});
+
+    const unsubTeach = onSnapshot(teachQ, (snap) => {
+      teachCount = snap.size;
+      updateCount();
+    }, () => {});
+
+    return () => {
+      unsubProd();
+      unsubVer();
+      unsubLuth();
+      unsubTeach();
+    };
+  }, [user, userRole]);
 
   useEffect(() => {
     if (!user) {
@@ -212,6 +261,9 @@ export default function HomePage() {
           
           querySnapshot.forEach((doc) => {
             const data = doc.data();
+            if (data.status === "pending" || data.status === "rejected") {
+              return;
+            }
             luthiersList.push({
               id: doc.id,
               title: data.name || "Sem nome",
@@ -237,6 +289,9 @@ export default function HomePage() {
           
           querySnapshot.forEach((doc) => {
             const data = doc.data();
+            if (data.status === "pending" || data.status === "rejected") {
+              return;
+            }
             teachersList.push({
               id: doc.id,
               title: data.name || "Sem nome",
@@ -640,9 +695,14 @@ export default function HomePage() {
                   <a
                     href="/admin"
                     id="nav-admin"
-                    className="text-xs text-[#ef7c2c] hover:text-white transition-colors py-2 px-3 rounded-lg border border-[#ef7c2c]/30 hover:border-[#ef7c2c]/60"
+                    className="text-xs text-[#ef7c2c] hover:text-white transition-colors py-2 px-3 rounded-lg border border-[#ef7c2c]/30 hover:border-[#ef7c2c]/60 flex items-center gap-1.5"
                   >
-                    Admin
+                    <span>Admin</span>
+                    {adminPendingCount > 0 && (
+                      <span className="flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white animate-pulse">
+                        {adminPendingCount}
+                      </span>
+                    )}
                   </a>
                 )}
                 <a

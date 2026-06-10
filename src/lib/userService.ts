@@ -41,6 +41,8 @@ export async function ensureUserDocument(uid: string, email: string | null, disp
     isProfessional: false,
     isTeacher: false,
     verificationStatus: "none",
+    luthierStatus: "none",
+    teacherStatus: "none",
     isPremium: false,
     premiumTier: "tier3",
     createdAt: Date.now(),
@@ -309,5 +311,79 @@ export async function updateLuthierProfile(uid: string, data: Partial<LuthierDat
       updatedAt: Date.now(),
     });
   }
+}
+
+export async function getPendingLuthiers(): Promise<LuthierData[]> {
+  try {
+    const q = query(
+      collection(db, "luthiers"),
+      where("status", "==", "pending"),
+      orderBy("createdAt", "desc"),
+    );
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() } as LuthierData));
+  } catch {
+    return [];
+  }
+}
+
+export async function getPendingTeachers(): Promise<TeacherData[]> {
+  try {
+    const q = query(
+      collection(db, "teachers"),
+      where("status", "==", "pending"),
+      orderBy("createdAt", "desc"),
+    );
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() } as TeacherData));
+  } catch {
+    return [];
+  }
+}
+
+export async function reviewLuthier(
+  userId: string,
+  status: "approved" | "rejected",
+  adminNotes: string,
+  adminUid: string,
+) {
+  const luthierRef = doc(db, "luthiers", userId);
+  await updateDoc(luthierRef, {
+    status,
+    adminNotes,
+    reviewedBy: adminUid,
+    reviewedAt: Date.now(),
+    updatedAt: Date.now(),
+  });
+
+  const userRef = doc(db, "users", userId);
+  await updateDoc(userRef, {
+    luthierStatus: status,
+    isProfessional: status === "approved",
+    updatedAt: Date.now(),
+  });
+}
+
+export async function reviewTeacher(
+  userId: string,
+  status: "approved" | "rejected",
+  adminNotes: string,
+  adminUid: string,
+) {
+  const teacherRef = doc(db, "teachers", userId);
+  await updateDoc(teacherRef, {
+    status,
+    adminNotes,
+    reviewedBy: adminUid,
+    reviewedAt: Date.now(),
+    updatedAt: Date.now(),
+  });
+
+  const userRef = doc(db, "users", userId);
+  await updateDoc(userRef, {
+    teacherStatus: status,
+    isTeacher: status === "approved",
+    updatedAt: Date.now(),
+  });
 }
 
