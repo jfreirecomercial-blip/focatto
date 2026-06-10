@@ -23,6 +23,7 @@ import {
 } from "@phosphor-icons/react";
 import { useAuth } from "../contexts/AuthContext";
 import LoginModal from "../components/LoginModal";
+import BannerCarousel from "../components/BannerCarousel";
 import { ROLES } from "../lib/roles";
 import { getUserData } from "../lib/userService";
 import { toast } from "sonner";
@@ -753,6 +754,8 @@ export default function HomePage() {
 
       {/* Main Content Dashboard */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 relative z-10">
+        
+        <BannerCarousel />
         
         {/* Navigation Tabs */}
         <div className="flex overflow-x-auto pb-2 gap-3 mb-6 scrollbar-hide flex-nowrap -mx-4 px-4 sm:mx-0 sm:px-0 scroll-smooth">
