@@ -42,6 +42,7 @@ export interface ProductData {
   createdAt: number;
   updatedAt: number;
   reviewedAt: number;
+  views?: number;
 }
 
 export interface TeacherData {
@@ -144,4 +145,31 @@ export interface SellerStats {
   averageRating: number;
   totalRatings: number;
   ratingDistribution: Record<number, number>;
+}
+
+export interface FavoriteData {
+  id?: string;
+  productId: string;
+  productTitle: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  sellerId: string;
+  createdAt: number;
+}
+
+export interface ProposalData {
+  id?: string;
+  productId: string;
+  productTitle: string;
+  sellerId: string;
+  sellerName: string;
+  senderId: string;
+  receiverId: string;
+  receiverName: string;
+  receiverEmail: string;
+  value: number;
+  message: string;
+  status: "pending" | "accepted" | "rejected";
+  createdAt: number;
 }

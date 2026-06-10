@@ -12,7 +12,8 @@ import {
   getLuthierProfile,
   updateLuthierProfile,
 } from "../../lib/userService";
-import type { UserData, VerificationStatus } from "../../lib/roles";
+import { getReceivedProposals, updateProposalStatus } from "../../lib/productService";
+import type { UserData, VerificationStatus, ProposalData } from "../../lib/roles";
 import {
   formatPhone,
   formatCpfCnpj,
@@ -43,6 +44,8 @@ import {
   Package,
   GraduationCap,
   Wrench,
+  Handshake,
+  CurrencyDollar,
 } from "@phosphor-icons/react";
 import { toast } from "sonner";
 
@@ -80,6 +83,9 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  const [proposals, setProposals] = useState<ProposalData[]>([]);
+  const [proposalsLoading, setProposalsLoading] = useState(true);
 
   const [displayName, setDisplayName] = useState("");
   const [phone, setPhone] = useState("");
@@ -337,10 +343,34 @@ export default function ProfilePage() {
             setLuthierRating(lData.averageRating || 5.0);
           }
         }
+
+        // Load received proposals
+        try {
+          const received = await getReceivedProposals(user.uid);
+          setProposals(received);
+        } catch (err) {
+          console.error("Error loading received proposals:", err);
+        } finally {
+          setProposalsLoading(false);
+        }
       }
       setLoading(false);
     })();
   }, [user]);
+
+  async function handleRespondProposal(proposalId: string, status: "accepted" | "rejected") {
+    try {
+      await updateProposalStatus(proposalId, status);
+      toast.success(status === "accepted" ? "Proposta aceita!" : "Proposta recusada.");
+      
+      // Update local state
+      setProposals((prev) =>
+        prev.map((p) => (p.id === proposalId ? { ...p, status } : p))
+      );
+    } catch {
+      toast.error("Erro ao atualizar proposta.");
+    }
+  }
 
   async function handleSave() {
     if (!user || !profile) return;
@@ -928,6 +958,83 @@ export default function ProfilePage() {
               />
             </label>
           </div>
+        </div>
+
+        {/* Propostas Recebidas */}
+        <div className="bg-[#141211] rounded-2xl p-6 border border-[#22201e] space-y-4">
+          <div className="flex items-center gap-2">
+            <Handshake size={18} className="text-[#ef7c2c]" />
+            <h3 className="text-sm font-bold uppercase tracking-wider text-surface-400">Propostas Recebidas</h3>
+          </div>
+          <p className="text-xs text-surface-400">
+            Confira abaixo as propostas enviadas por vendedores dos anúncios que você favoritou.
+          </p>
+
+          {proposalsLoading ? (
+            <div className="flex items-center justify-center py-6 text-surface-500">
+              <Spinner size={18} className="animate-spin text-[#ef7c2c] mr-2" />
+              <span className="text-xs">Carregando propostas...</span>
+            </div>
+          ) : proposals.length === 0 ? (
+            <div className="text-center py-8 bg-[#110f0e] rounded-xl border border-[#1c1a19]">
+              <CurrencyDollar size={32} className="mx-auto text-surface-500 mb-2" />
+              <p className="text-xs text-surface-400">Nenhuma proposta recebida até o momento.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {proposals.map((prop) => (
+                <div key={prop.id} className="bg-[#110f0e] rounded-xl p-4 border border-[#1c1a19] space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <Link href={`/anuncio/${prop.productId}`} className="text-xs font-bold text-white hover:text-[#ef7c2c] transition-colors block truncate">
+                        {prop.productTitle}
+                      </Link>
+                      <p className="text-[10px] text-surface-400 mt-0.5">Vendedor: {prop.sellerName}</p>
+                    </div>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold flex-shrink-0 ${
+                      prop.status === "accepted" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" :
+                      prop.status === "rejected" ? "bg-red-500/10 text-red-400 border border-red-500/20" :
+                      "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                    }`}>
+                      {prop.status === "accepted" ? "Aceita" : prop.status === "rejected" ? "Recusada" : "Pendente"}
+                    </span>
+                  </div>
+
+                  {prop.message && (
+                    <p className="text-[11px] text-surface-300 bg-[#141211] p-2 rounded-lg border border-[#22201e] italic">
+                      "{prop.message}"
+                    </p>
+                  )}
+
+                  <div className="flex items-center justify-between gap-3 pt-1 border-t border-[#1c1a19]/50">
+                    <div>
+                      <span className="text-[10px] text-surface-500 block uppercase tracking-wider font-semibold">Valor Proposto</span>
+                      <span className="text-sm font-bold text-[#ef7c2c]">R$ {prop.value.toLocaleString("pt-BR")}</span>
+                    </div>
+
+                    {prop.status === "pending" && (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleRespondProposal(prop.id!, "rejected")}
+                          className="flex items-center gap-1 py-1.5 px-3 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-all text-xs font-semibold cursor-pointer"
+                        >
+                          <XCircle size={14} />
+                          Recusar
+                        </button>
+                        <button
+                          onClick={() => handleRespondProposal(prop.id!, "accepted")}
+                          className="flex items-center gap-1 py-1.5 px-3 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition-all text-xs font-semibold cursor-pointer"
+                        >
+                          <CheckCircle size={14} />
+                          Aceitar
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Luthier Profile Section */}

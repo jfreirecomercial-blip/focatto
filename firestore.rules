@@ -156,6 +156,13 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Favorites collection
+    match /favorites/{favoriteId} {
+      allow read: if isAuth();
+      allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
+      allow delete: if isAuth() && request.auth.uid == resource.data.userId;
+    }
+
     // Ratings subcollection (under products)
     match /products/{productId}/ratings/{ratingId} {
       // Anyone can read ratings

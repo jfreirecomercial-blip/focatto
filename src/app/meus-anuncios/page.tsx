@@ -3,13 +3,15 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { getUserData } from "../../lib/userService";
-import { createProduct, getUserProducts } from "../../lib/productService";
-import type { ProductData } from "../../lib/roles";
+import {
+  createProduct, getUserProducts, getSellerProductsFavorites, getSentProposals, createProposal,
+} from "../../lib/productService";
+import type { ProductData, FavoriteData, ProposalData } from "../../lib/roles";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Compass, SignOut, Package, Plus, Spinner, ArrowLeft, Clock, CheckCircle, XCircle,
-  MapPin, CurrencyDollar, Tag, FileImage, Trash,
+  MapPin, CurrencyDollar, Tag, FileImage, Trash, HeartStraight,
 } from "@phosphor-icons/react";
 import { toast } from "sonner";
 
@@ -57,6 +59,59 @@ export default function MeusAnunciosPage() {
 
   const photoInputRef = useRef<HTMLInputElement>(null);
 
+  const [allFavorites, setAllFavorites] = useState<FavoriteData[]>([]);
+  const [allProposals, setAllProposals] = useState<ProposalData[]>([]);
+
+  // Proposal modal states
+  const [showProposalModal, setShowProposalModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<ProductData | null>(null);
+  const [selectedFav, setSelectedFav] = useState<FavoriteData | null>(null);
+  const [proposalValue, setProposalValue] = useState("");
+  const [proposalMessage, setProposalMessage] = useState("");
+  const [sendingProposal, setSendingProposal] = useState(false);
+
+  function handleOpenProposalModal(product: ProductData, favorite: FavoriteData) {
+    setSelectedProduct(product);
+    setSelectedFav(favorite);
+    setProposalValue(String(product.price));
+    setProposalMessage(
+      `Olá ${favorite.userName}! Vi que você favoritou o meu anúncio "${product.title}". Gostaria de te fazer uma proposta especial...`
+    );
+    setShowProposalModal(true);
+  }
+
+  async function handleSubmitProposal() {
+    if (!user || !selectedProduct || !selectedFav || !proposalValue) return;
+    if (Number(proposalValue) <= 0) {
+      toast.error("O valor da proposta deve ser maior que zero.");
+      return;
+    }
+    setSendingProposal(true);
+    try {
+      await createProposal(
+        selectedProduct.id!,
+        selectedProduct.title,
+        user.uid,
+        user.displayName || user.email || "Vendedor",
+        selectedFav.userId,
+        selectedFav.userName,
+        selectedFav.userEmail,
+        Number(proposalValue),
+        proposalMessage,
+        user.uid
+      );
+      toast.success("Proposta enviada com sucesso!");
+      setShowProposalModal(false);
+      // Reload proposals
+      const updatedProposals = await getSentProposals(user.uid);
+      setAllProposals(updatedProposals);
+    } catch (error) {
+      toast.error("Erro ao enviar proposta.");
+    } finally {
+      setSendingProposal(false);
+    }
+  }
+
   useEffect(() => {
     if (!authLoading && !user) {
       router.push("/");
@@ -72,8 +127,14 @@ export default function MeusAnunciosPage() {
     if (!user) return;
     setLoading(true);
     try {
-      const data = await getUserProducts(user.uid);
-      setProducts(data);
+      const [productsData, favoritesData, proposalsData] = await Promise.all([
+        getUserProducts(user.uid),
+        getSellerProductsFavorites(user.uid),
+        getSentProposals(user.uid),
+      ]);
+      setProducts(productsData);
+      setAllFavorites(favoritesData);
+      setAllProposals(proposalsData);
     } catch {
       toast.error("Erro ao carregar anúncios.");
     } finally {
@@ -338,6 +399,7 @@ export default function MeusAnunciosPage() {
                         <MapPin size={10} className="inline mr-0.5" />
                         {product.city}, {product.state}
                         {product.price ? ` | R$ ${product.price.toLocaleString("pt-BR")}` : ""}
+                        {` | ${product.views || 0} visualizações`}
                       </p>
                     </div>
                     {statusBadge(product.status)}
@@ -356,12 +418,138 @@ export default function MeusAnunciosPage() {
                       ))}
                     </div>
                   )}
+
+                  {/* Interested buyers (Favorites) */}
+                  {(() => {
+                    const productFavs = allFavorites.filter((f) => f.productId === product.id);
+                    if (productFavs.length === 0) return null;
+                    return (
+                      <div className="mt-3 pt-3 border-t border-[#1c1a19]/80 space-y-2">
+                        <p className="text-xs font-semibold text-[#ef7c2c] flex items-center gap-1">
+                          <HeartStraight size={12} weight="fill" />
+                          Interessados que favoritaram ({productFavs.length}):
+                        </p>
+                        <div className="grid gap-2">
+                          {productFavs.map((fav) => {
+                            const existingProposal = allProposals.find(
+                              (p) => p.productId === product.id && p.receiverId === fav.userId
+                            );
+                            return (
+                              <div
+                                key={fav.id}
+                                className="flex flex-col sm:flex-row sm:items-center justify-between bg-[#141211] p-3 rounded-xl border border-[#22201e] gap-3"
+                              >
+                                <div className="min-w-0">
+                                  <p className="text-xs font-bold text-white truncate">{fav.userName}</p>
+                                  <p className="text-[10px] text-surface-400 truncate">{fav.userEmail}</p>
+                                </div>
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                  {existingProposal ? (
+                                    <span
+                                      className={`text-[10px] px-2 py-1 rounded-lg font-semibold ${
+                                        existingProposal.status === "accepted"
+                                          ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                                          : existingProposal.status === "rejected"
+                                          ? "bg-red-500/10 text-red-400 border border-red-500/20"
+                                          : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                                      }`}
+                                    >
+                                      Proposta: R$ {existingProposal.value} ({
+                                        existingProposal.status === "accepted" ? "Aceita" :
+                                        existingProposal.status === "rejected" ? "Recusada" :
+                                        "Pendente"
+                                      })
+                                    </span>
+                                  ) : (
+                                    <button
+                                      onClick={() => handleOpenProposalModal(product, fav)}
+                                      className="py-1.5 px-3 rounded-lg bg-[#ef7c2c]/10 text-[#ef7c2c] border border-[#ef7c2c]/20 hover:bg-[#ef7c2c]/20 transition-all text-xs font-semibold cursor-pointer"
+                                    >
+                                      Fazer Proposta
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               ))}
             </div>
           )}
         </div>
       </main>
+
+      {/* Proposal Modal */}
+      {showProposalModal && selectedProduct && selectedFav && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md bg-[#0c0a09] border border-[#2a2827] rounded-3xl shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between px-6 pt-6 pb-2">
+              <div className="flex items-center gap-2">
+                <span className="p-1.5 rounded-lg bg-[#ef7c2c]/10 text-[#ef7c2c]">
+                  <CurrencyDollar size={18} weight="bold" />
+                </span>
+                <h2 className="text-base font-bold text-white">Fazer Proposta</h2>
+              </div>
+              <button
+                onClick={() => setShowProposalModal(false)}
+                className="h-8 w-8 flex items-center justify-center rounded-lg text-surface-400 hover:text-white hover:bg-[#181615] transition-colors cursor-pointer"
+              >
+                <XCircle size={18} />
+              </button>
+            </div>
+
+            <div className="px-6 pb-6 pt-2 space-y-4">
+              <p className="text-xs text-surface-400">
+                Envie uma proposta de preço personalizada para <strong>{selectedFav.userName}</strong>.
+              </p>
+
+              <div>
+                <label className="block text-xs text-surface-400 mb-1.5">Produto</label>
+                <div className="bg-[#181615] border border-[#2a2827] rounded-xl px-4 py-3 text-xs text-white">
+                  {selectedProduct.title} (Preço atual: R$ {selectedProduct.price.toLocaleString("pt-BR")})
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="proposal-value-input" className="block text-xs text-surface-400 mb-1.5">Valor Proposto (R$)</label>
+                <input
+                  type="number"
+                  id="proposal-value-input"
+                  value={proposalValue}
+                  onChange={(e) => setProposalValue(e.target.value)}
+                  placeholder="Ex: 8500"
+                  className={inputBase}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="proposal-message-textarea" className="block text-xs text-surface-400 mb-1.5">Mensagem para o interessado</label>
+                <textarea
+                  id="proposal-message-textarea"
+                  value={proposalMessage}
+                  onChange={(e) => setProposalMessage(e.target.value)}
+                  placeholder="Olá! Posso te dar um desconto..."
+                  rows={4}
+                  className={`${inputBase} resize-none`}
+                />
+              </div>
+
+              <button
+                onClick={handleSubmitProposal}
+                disabled={sendingProposal || !proposalValue}
+                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#ef7c2c] to-[#d4ae12] text-white font-bold text-sm transition-all duration-200 hover:shadow-[0_4px_20px_rgba(239,124,44,0.3)] active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                {sendingProposal ? <Spinner size={16} className="animate-spin" /> : null}
+                Enviar Proposta
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,10 +1,10 @@
 import {
   doc, getDoc, setDoc, updateDoc, collection, addDoc, getDocs,
-  query, where, orderBy, deleteDoc, Timestamp,
+  query, where, orderBy, deleteDoc, Timestamp, increment,
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "../firebase";
-import type { ProductData, ProductStatus } from "./roles";
+import type { ProductData, ProductStatus, FavoriteData, ProposalData } from "./roles";
 
 export async function createProduct(
   userId: string,
@@ -150,4 +150,145 @@ export async function getApprovedProducts(): Promise<ProductData[]> {
 
 export async function deleteProduct(productId: string) {
   await deleteDoc(doc(db, "products", productId));
+}
+
+export async function incrementProductViews(productId: string): Promise<void> {
+  try {
+    const productRef = doc(db, "products", productId);
+    await updateDoc(productRef, {
+      views: increment(1),
+    });
+  } catch (error) {
+    console.error("Error incrementing views:", error);
+  }
+}
+
+export async function isProductFavorited(productId: string, userId: string): Promise<boolean> {
+  try {
+    const q = query(
+      collection(db, "favorites"),
+      where("productId", "==", productId),
+      where("userId", "==", userId)
+    );
+    const snap = await getDocs(q);
+    return !snap.empty;
+  } catch {
+    return false;
+  }
+}
+
+export async function toggleFavoriteProduct(
+  productId: string,
+  productTitle: string,
+  userId: string,
+  userName: string,
+  userEmail: string,
+  sellerId: string
+): Promise<{ favorited: boolean }> {
+  const q = query(
+    collection(db, "favorites"),
+    where("productId", "==", productId),
+    where("userId", "==", userId)
+  );
+  const snap = await getDocs(q);
+
+  if (!snap.empty) {
+    // Delete existing favorite
+    const docId = snap.docs[0].id;
+    await deleteDoc(doc(db, "favorites", docId));
+    return { favorited: false };
+  } else {
+    // Add new favorite
+    const favData: Omit<FavoriteData, "id"> = {
+      productId,
+      productTitle,
+      userId,
+      userName,
+      userEmail,
+      sellerId,
+      createdAt: Date.now(),
+    };
+    await addDoc(collection(db, "favorites"), favData);
+    return { favorited: true };
+  }
+}
+
+export async function getSellerProductsFavorites(sellerId: string): Promise<FavoriteData[]> {
+  try {
+    const q = query(
+      collection(db, "favorites"),
+      where("sellerId", "==", sellerId)
+    );
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() } as FavoriteData));
+  } catch {
+    return [];
+  }
+}
+
+export async function createProposal(
+  productId: string,
+  productTitle: string,
+  sellerId: string,
+  sellerName: string,
+  receiverId: string,
+  receiverName: string,
+  receiverEmail: string,
+  value: number,
+  message: string,
+  senderId: string
+): Promise<string> {
+  const proposalData: Omit<ProposalData, "id"> = {
+    productId,
+    productTitle,
+    sellerId,
+    sellerName,
+    senderId,
+    receiverId,
+    receiverName,
+    receiverEmail,
+    value,
+    message,
+    status: "pending",
+    createdAt: Date.now(),
+  };
+
+  const docRef = await addDoc(collection(db, "proposals"), proposalData);
+  return docRef.id;
+}
+
+export async function getSentProposals(userId: string): Promise<ProposalData[]> {
+  try {
+    const q = query(
+      collection(db, "proposals"),
+      where("senderId", "==", userId)
+    );
+    const snap = await getDocs(q);
+    const data = snap.docs.map((d) => ({ id: d.id, ...d.data() } as ProposalData));
+    return data.sort((a, b) => b.createdAt - a.createdAt);
+  } catch {
+    return [];
+  }
+}
+
+export async function getReceivedProposals(userId: string): Promise<ProposalData[]> {
+  try {
+    const q = query(
+      collection(db, "proposals"),
+      where("receiverId", "==", userId)
+    );
+    const snap = await getDocs(q);
+    const data = snap.docs.map((d) => ({ id: d.id, ...d.data() } as ProposalData));
+    return data.sort((a, b) => b.createdAt - a.createdAt);
+  } catch {
+    return [];
+  }
+}
+
+export async function updateProposalStatus(
+  proposalId: string,
+  status: "accepted" | "rejected"
+): Promise<void> {
+  const proposalRef = doc(db, "proposals", proposalId);
+  await updateDoc(proposalRef, { status });
 }

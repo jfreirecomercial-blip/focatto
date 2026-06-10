@@ -5,7 +5,9 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { collection, query, orderBy, getDocs } from "firebase/firestore";
 import { db } from "../../../firebase";
-import { getProductById } from "../../../lib/productService";
+import {
+  getProductById, incrementProductViews, isProductFavorited, toggleFavoriteProduct,
+} from "../../../lib/productService";
 import { getUserData } from "../../../lib/userService";
 import {
   addRating, getProductRatings, getUserRatingForProduct, getSellerStats,
@@ -14,8 +16,9 @@ import { useAuth } from "../../../contexts/AuthContext";
 import LoginModal from "../../../components/LoginModal";
 import type { ProductData, UserData, RatingData, SellerStats } from "../../../lib/roles";
 import {
-  ArrowLeft, Star, MapPin, User, Tag, ShieldCheck, Clock,WhatsappLogo
+  ArrowLeft, Star, MapPin, User, Tag, ShieldCheck, Clock, WhatsappLogo, HeartStraight,
 } from "@phosphor-icons/react";
+import { toast } from "sonner";
 
 export default function AnuncioDetalhePage() {
   const params = useParams();
@@ -33,6 +36,8 @@ export default function AnuncioDetalhePage() {
   const [ratingValue, setRatingValue] = useState(0);
   const [ratingComment, setRatingComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -42,6 +47,11 @@ export default function AnuncioDetalhePage() {
       setProduct(prod);
 
       if (prod) {
+        // Increment views if viewer is not the seller
+        if (!user || user.uid !== prod.userId) {
+          await incrementProductViews(productId);
+        }
+
         const [sellerData, stats, productRatings] = await Promise.all([
           getUserData(prod.userId),
           getSellerStats(prod.userId),
@@ -52,8 +62,12 @@ export default function AnuncioDetalhePage() {
         setRatings(productRatings);
 
         if (user) {
-          const existing = await getUserRatingForProduct(productId, user.uid);
+          const [existing, favStatus] = await Promise.all([
+            getUserRatingForProduct(productId, user.uid),
+            isProductFavorited(productId, user.uid),
+          ]);
           setUserRating(existing);
+          setIsFavorited(favStatus);
         }
       }
       setLoading(false);
@@ -87,6 +101,31 @@ export default function AnuncioDetalhePage() {
       setUserRating(existing);
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function handleToggleFavorite() {
+    if (!user || !product) return;
+    setFavoriteLoading(true);
+    try {
+      const { favorited } = await toggleFavoriteProduct(
+        productId,
+        product.title,
+        user.uid,
+        user.displayName || user.email || "Usuário",
+        user.email || "",
+        product.userId
+      );
+      setIsFavorited(favorited);
+      if (favorited) {
+        toast.success("Adicionado aos favoritos!");
+      } else {
+        toast.success("Removido dos favoritos.");
+      }
+    } catch (error) {
+      toast.error("Erro ao atualizar favoritos.");
+    } finally {
+      setFavoriteLoading(false);
     }
   }
 
@@ -150,14 +189,31 @@ export default function AnuncioDetalhePage() {
 
             {/* Info */}
             <div className="bg-[#141211] rounded-2xl p-5 border border-[#22201e] shadow-xl">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-[10px] uppercase tracking-wider font-bold text-surface-400 bg-surface-800 px-2 py-0.5 rounded">
-                  {product.category}
-                </span>
-                {product.condition && (
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <div className="flex items-center gap-2">
                   <span className="text-[10px] uppercase tracking-wider font-bold text-surface-400 bg-surface-800 px-2 py-0.5 rounded">
-                    {product.condition}
+                    {product.category}
                   </span>
+                  {product.condition && (
+                    <span className="text-[10px] uppercase tracking-wider font-bold text-surface-400 bg-surface-800 px-2 py-0.5 rounded">
+                      {product.condition}
+                    </span>
+                  )}
+                </div>
+                {/* Heart Button */}
+                {(!user || user.uid !== product.userId) && (
+                  <button
+                    onClick={user ? handleToggleFavorite : () => setShowLogin(true)}
+                    disabled={favoriteLoading}
+                    className="flex items-center justify-center p-2 rounded-xl border border-[#2a2827] bg-[#181615] text-surface-400 hover:text-red-500 hover:border-red-500/30 transition-all cursor-pointer flex-shrink-0"
+                    title={isFavorited ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+                  >
+                    <HeartStraight
+                      size={18}
+                      weight={isFavorited ? "fill" : "regular"}
+                      className={isFavorited ? "text-red-500" : ""}
+                    />
+                  </button>
                 )}
               </div>
               <h1 className="text-xl sm:text-2xl font-bold text-white font-heading mt-2">{product.title}</h1>
