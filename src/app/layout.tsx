@@ -18,6 +18,7 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://focatto.firebaseapp.com"),
   title: "Focattolecter - Marketplace de Instrumentos Musicais",
   description: "Encontre instrumentos musicais e luthiers especializados perto de você.",
 };

@@ -5,8 +5,7 @@ import L from "leaflet";
 
 // Fix Leaflet marker icon issue
 const fixLeafletIcon = () => {
-  // @ts-ignore
-  delete L.Icon.Default.prototype._getIconUrl;
+  delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl;
   L.Icon.Default.mergeOptions({
     iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
     iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
@@ -78,22 +77,35 @@ export default function Map({
 
     if (city && state) {
       const query = `${city}, ${state}, Brasil`;
-      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`)
+      // Nominatim tem rate-limit rígido; aborta após 5s (caindo para a
+      // capital do estado) e cancela ao desmontar/trocar de item.
+      let cancelled = false;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      const fallbackToCapital = () => {
+        if (cancelled) return;
+        const uppercaseState = state.toUpperCase().trim();
+        setCoords(stateCapitals[uppercaseState] || [-23.55, -46.633]);
+      };
+      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`, {
+        signal: controller.signal,
+      })
         .then((res) => res.json())
         .then((data) => {
+          if (cancelled) return;
           if (data && data.length > 0) {
             setCoords([parseFloat(data[0].lat), parseFloat(data[0].lon)]);
           } else {
-            const uppercaseState = state.toUpperCase().trim();
-            const capitalCoords = stateCapitals[uppercaseState] || [-23.55, -46.633];
-            setCoords(capitalCoords);
+            fallbackToCapital();
           }
         })
-        .catch(() => {
-          const uppercaseState = state.toUpperCase().trim();
-          const capitalCoords = stateCapitals[uppercaseState] || [-23.55, -46.633];
-          setCoords(capitalCoords);
-        });
+        .catch(() => fallbackToCapital())
+        .finally(() => clearTimeout(timeoutId));
+      return () => {
+        cancelled = true;
+        controller.abort();
+        clearTimeout(timeoutId);
+      };
     } else if (state) {
       const uppercaseState = state.toUpperCase().trim();
       const capitalCoords = stateCapitals[uppercaseState] || [-23.55, -46.633];
