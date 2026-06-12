@@ -172,10 +172,13 @@ export default function MeusAnunciosPage() {
     const files = Array.from(e.target.files || []);
     const newPhotos = [...photos, ...files].slice(0, 6);
     setPhotos(newPhotos);
+    // Revoga os object URLs antigos antes de gerar novos, evitando vazamento de memória.
+    photoPreviews.forEach((url) => URL.revokeObjectURL(url));
     setPhotoPreviews(newPhotos.map((f) => URL.createObjectURL(f)));
   }
 
   function removePhoto(index: number) {
+    if (photoPreviews[index]) URL.revokeObjectURL(photoPreviews[index]);
     setPhotos((prev) => prev.filter((_, i) => i !== index));
     setPhotoPreviews((prev) => prev.filter((_, i) => i !== index));
   }
@@ -183,7 +186,9 @@ export default function MeusAnunciosPage() {
   async function handleSubmit() {
     if (!user) return;
     if (!title.trim()) { toast.error("Título é obrigatório."); return; }
-    if (!price || Number(price) <= 0) { toast.error("Preço inválido."); return; }
+    if (title.trim().length > 120) { toast.error("O título deve ter no máximo 120 caracteres."); return; }
+    if (description.trim().length > 5000) { toast.error("A descrição deve ter no máximo 5.000 caracteres."); return; }
+    if (!price || Number(price) <= 0 || !Number.isFinite(Number(price))) { toast.error("Preço inválido."); return; }
     if (!city.trim() || !state.trim()) { toast.error("Cidade e estado são obrigatórios."); return; }
 
     setSubmitting(true);
@@ -214,6 +219,7 @@ export default function MeusAnunciosPage() {
       setCity("");
       setState("");
       setPhotos([]);
+      photoPreviews.forEach((url) => URL.revokeObjectURL(url));
       setPhotoPreviews([]);
       loadProducts();
     } catch {
@@ -440,7 +446,7 @@ export default function MeusAnunciosPage() {
                   {product.photos && product.photos.length > 0 && (
                     <div className="flex gap-1.5 overflow-x-auto">
                       {product.photos.map((photo, idx) => (
-                        <img key={idx} src={photo} alt=""
+                        <img loading="lazy" decoding="async" key={idx} src={photo} alt=""
                           className="h-14 w-14 rounded-lg object-cover border border-[#2a2827] flex-shrink-0"
                         />
                       ))}
@@ -652,7 +658,7 @@ export default function MeusAnunciosPage() {
                     <div className="flex flex-wrap gap-2">
                       {tradePhotoPreviews.map((preview, index) => (
                         <div key={index} className="relative">
-                          <img
+                          <img loading="lazy" decoding="async"
                             src={preview}
                             alt={`Trade photo ${index + 1}`}
                             className="h-16 w-16 rounded-xl object-cover border border-[#2a2827]"

@@ -1,6 +1,6 @@
 import {
   doc, getDoc, setDoc, updateDoc, collection, addDoc, getDocs,
-  query, where, orderBy, deleteDoc, Timestamp, increment,
+  query, where, orderBy, deleteDoc, Timestamp, increment, limit,
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "../firebase";
@@ -57,7 +57,7 @@ export async function getPendingProducts(): Promise<ProductData[]> {
 
 export async function getAllProducts(): Promise<ProductData[]> {
   try {
-    const q = query(collection(db, "products"), orderBy("createdAt", "desc"));
+    const q = query(collection(db, "products"), orderBy("createdAt", "desc"), limit(500));
     const snap = await getDocs(q);
     return snap.docs.map((d) => ({ id: d.id, ...d.data() } as ProductData));
   } catch {
